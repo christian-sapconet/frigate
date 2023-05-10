@@ -24,9 +24,14 @@ class CameraMetricsTypes(TypedDict):
     skipped_fps: Synchronized
 
 
+class RecordMetricsTypes(TypedDict):
+    record_enabled: Synchronized
+
+
 class StatsTrackingTypes(TypedDict):
     camera_metrics: dict[str, CameraMetricsTypes]
     detectors: dict[str, ObjectDetectProcess]
     started: int
     latest_frigate_version: str
     last_updated: int
+    processes: dict[str, int]

@@ -1,6 +1,8 @@
 import datetime
 import json
 import logging
+import string
+import random
 import os
 import re
 import requests
@@ -11,6 +13,10 @@ from numpy import ndarray
 
 logger = logging.getLogger(__name__)
 
+def generate_random_string(length):
+    letters_and_digits = string.ascii_letters + string.digits
+    result_str = ''.join(random.choice(letters_and_digits) for _ in range(length))
+    return result_str
 
 def get_jpg_bytes(image: ndarray, max_dim: int, quality: int) -> bytes:
     if image.shape[1] >= image.shape[0]:
@@ -50,77 +56,87 @@ class PlusApi:
         self._is_active: bool = self.key is not None
         self._token_data: dict = {}
 
-    def _refresh_token_if_needed(self) -> None:
-        if (
-            self._token_data.get("expires") is None
-            or self._token_data["expires"] - datetime.datetime.now().timestamp() < 60
-        ):
-            if self.key is None:
-                raise Exception("Plus API not activated")
-            parts = self.key.split(":")
-            r = requests.get(f"{self.host}/v1/auth/token", auth=(parts[0], parts[1]))
-            if not r.ok:
-                raise Exception("Unable to refresh API token")
-            self._token_data = r.json()
+    # def _refresh_token_if_needed(self) -> None:
+    #     if (
+    #         self._token_data.get("expires") is None
+    #         or self._token_data["expires"] - datetime.datetime.now().timestamp() < 60
+    #     ):
+    #         if self.key is None:
+    #             raise Exception("Plus API not activated")
+    #         parts = self.key.split(":")
+    #         r = requests.get(f"{self.host}/v1/auth/token", auth=(parts[0], parts[1]))
+    #         if not r.ok:
+    #             raise Exception("Unable to refresh API token")
+    #         self._token_data = r.json()
 
-    def _get_authorization_header(self) -> dict:
-        self._refresh_token_if_needed()
-        return {"authorization": f"Bearer {self._token_data.get('accessToken')}"}
+    # def _get_authorization_header(self) -> dict:
+    #     self._refresh_token_if_needed()
+    #     return {"authorization": f"Bearer {self._token_data.get('accessToken')}"}
 
-    def _get(self, path: str) -> Response:
-        return requests.get(
-            f"{self.host}/v1/{path}", headers=self._get_authorization_header()
-        )
+    # def _get(self, path: str) -> Response:
+    #     return requests.get(
+    #         f"{self.host}/v1/{path}", headers=self._get_authorization_header()
+    #     )
 
-    def _post(self, path: str, data: dict) -> Response:
-        return requests.post(
-            f"{self.host}/v1/{path}",
-            headers=self._get_authorization_header(),
-            json=data,
-        )
+    # def _post(self, path: str, data: dict) -> Response:
+    #     return requests.post(
+    #         f"{self.host}/v1/{path}",
+    #         headers=self._get_authorization_header(),
+    #         json=data,
+    #     )
 
     def is_active(self) -> bool:
         return self._is_active
 
     def upload_image(self, image: ndarray, camera: str) -> str:
-        r = self._get("image/signed_urls")
-        presigned_urls = r.json()
-        if not r.ok:
-            raise Exception("Unable to get signed urls")
+        # r = self._get("image/signed_urls")
+        # presigned_urls = r.json()
+        # if not r.ok:
+        #     raise Exception("Unable to get signed urls")
 
-        # resize and submit original
-        files = {"file": get_jpg_bytes(image, 1920, 85)}
-        data = presigned_urls["original"]["fields"]
-        data["content-type"] = "image/jpeg"
-        r = requests.post(presigned_urls["original"]["url"], files=files, data=data)
-        if not r.ok:
-            logger.error(f"Failed to upload original: {r.status_code} {r.text}")
-            raise Exception(r.text)
+        # # resize and submit original
+        # files = {"file": get_jpg_bytes(image, 1920, 85)}
+        # data = presigned_urls["original"]["fields"]
+        # data["content-type"] = "image/jpeg"
+        # r = requests.post(presigned_urls["original"]["url"], files=files, data=data)
+        # print("Resize and submit: " + str(r))
+        # if not r.ok:
+        #     logger.error(f"Failed to upload original: {r.status_code} {r.text}")
+        #     raise Exception(r.text)
 
-        # resize and submit annotate
-        files = {"file": get_jpg_bytes(image, 640, 70)}
-        data = presigned_urls["annotate"]["fields"]
-        data["content-type"] = "image/jpeg"
-        r = requests.post(presigned_urls["annotate"]["url"], files=files, data=data)
-        if not r.ok:
-            logger.error(f"Failed to upload annotate: {r.status_code} {r.text}")
-            raise Exception(r.text)
+        # # resize and submit annotate
+        # files = {"file": get_jpg_bytes(image, 640, 70)}
+        # data = presigned_urls["annotate"]["fields"]
+        # data["content-type"] = "image/jpeg"
+        # r = requests.post(presigned_urls["annotate"]["url"], files=files, data=data)
+        # print("Resize and submit annotate: " + str(r))
+        # if not r.ok:
+        #     logger.error(f"Failed to upload annotate: {r.status_code} {r.text}")
+        #     raise Exception(r.text)
 
-        # resize and submit thumbnail
-        files = {"file": get_jpg_bytes(image, 200, 70)}
-        data = presigned_urls["thumbnail"]["fields"]
-        data["content-type"] = "image/jpeg"
-        r = requests.post(presigned_urls["thumbnail"]["url"], files=files, data=data)
-        if not r.ok:
-            logger.error(f"Failed to upload thumbnail: {r.status_code} {r.text}")
-            raise Exception(r.text)
+        # # resize and submit thumbnail
+        # files = {"file": get_jpg_bytes(image, 200, 70)}
+        # data = presigned_urls["thumbnail"]["fields"]
+        # data["content-type"] = "image/jpeg"
+        # r = requests.post(presigned_urls["thumbnail"]["url"], files=files, data=data)
+        # print("Resize and submit thumbnail: " + str(r))
+        # if not r.ok:
+        #     logger.error(f"Failed to upload thumbnail: {r.status_code} {r.text}")
+        #     raise Exception(r.text)
 
-        # create image
-        r = self._post(
-            "image/create", {"id": presigned_urls["imageId"], "camera": camera}
-        )
-        if not r.ok:
-            raise Exception(r.text)
+        # # create image
+        # r = self._post(
+        #     "image/create", {"id": presigned_urls["imageId"], "camera": camera}
+        # )
+        # print("create image: " + str(r))
+        # if not r.ok:
+        #     raise Exception(r.text)
 
-        # return image id
-        return str(presigned_urls.get("imageId"))
+        # # return image id
+        # print("Return image ID: " + str(presigned_urls.get("imageId")))
+
+        # Test the function
+        random_string = generate_random_string(22)
+        print("Return image ID: " + str(random_string))
+        logger.info("Return image ID: " + str(random_string))
+        return str(random_string)

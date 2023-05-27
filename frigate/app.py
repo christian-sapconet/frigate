@@ -27,6 +27,7 @@ from frigate.models import Event, Recordings
 from frigate.object_processing import TrackedObjectProcessor
 from frigate.output import output_frames
 from frigate.plus import PlusApi
+from frigate.retrain import RetrainApi
 from frigate.record import RecordingCleanup, RecordingMaintainer
 from frigate.stats import StatsEmitter, stats_init
 from frigate.storage import StorageMaintainer

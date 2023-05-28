@@ -28,7 +28,6 @@ import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../uti
 import TimeAgo from '../components/TimeAgo';
 
 const API_LIMIT = 25;
-const eventRetrainType = "Accept";
 
 const daysAgo = (num) => {
   let date = new Date();
@@ -84,10 +83,7 @@ export default function Events({ path, ...props }) {
     setSelectedCheckboxes([]);
   };
 
-  const logSelectedCheckboxes = () => {
-    console.log('Selected checkboxes:', selectedCheckboxes);
-    // clearSelectedCheckboxes();
-  };
+
 
   const eventsFetcher = useCallback((path, params) => {
     params = { ...params, include_thumbnails: 0, limit: API_LIMIT };
@@ -113,7 +109,7 @@ export default function Events({ path, ...props }) {
 
   const { data: allSubLabels } = useSWR(['sub_labels', { split_joined: 1 }]);
 
-  const apiHost2 = 'http://10.0.10.49:5003/' ;
+
 
 
   const filterValues = useMemo(
@@ -250,32 +246,32 @@ export default function Events({ path, ...props }) {
     );
   };
 
-  const handleCheckboxChange = (event) => {
-    const { value } = event.target;
-    const index = state.selectedCheckboxes.indexOf(value);
+  // const handleCheckboxChange = (event) => {
+  //   const { value } = event.target;
+  //   const index = state.selectedCheckboxes.indexOf(value);
 
-    if (index === -1) {
-      setState((prevState) => ({
-        ...prevState,
-        selectedCheckboxes: [...prevState.selectedCheckboxes, value]
-      }));
-    } else {
-      setState((prevState) => ({
-        ...prevState,
-        selectedCheckboxes: prevState.selectedCheckboxes.filter(
-          (checkbox) => checkbox !== value
-        )
-      }));
-    }
-  };
+  //   if (index === -1) {
+  //     setState((prevState) => ({
+  //       ...prevState,
+  //       selectedCheckboxes: [...prevState.selectedCheckboxes, value]
+  //     }));
+  //   } else {
+  //     setState((prevState) => ({
+  //       ...prevState,
+  //       selectedCheckboxes: prevState.selectedCheckboxes.filter(
+  //         (checkbox) => checkbox !== value
+  //       ),
+  //     }));
+  //   }
+  // };
 
 
   async function rejectEvent(event_id) {
-    console.log('Reject event id:', event_id);
+    // //console.log('Reject event id:', event_id);
 
     try {
       const body = JSON.stringify({
-        "event_id": event_id
+        "event_id": event_id,
 
       });
 
@@ -288,25 +284,26 @@ export default function Events({ path, ...props }) {
       });
 
       if (response && response.ok) {
-        console.log('Reject event handled successfully');
+        // ////console.log('Reject event handled successfully');
         return response.ok
       } else if (response) {
-        const errorResponse = await response.json();
-        console.log('Error:', errorResponse.message);
+        // const errorResponse =
+        await response.json();
+        // ////console.log('Error:', errorResponse.message);
       } else {
-        console.log('Error: No response received');
+        //console.log('Error: No response received');
       }
     } catch (error) {
-      console.error('Error:', error.message);
+      //console.error('Error:', error.message);
     }
   }
 
   async function acceptEvent(event_id) {
-    console.log('Accept event id:', event_id);
+    //console.log('Accept event id:', event_id);
 
     try {
       const body = JSON.stringify({
-        "event_id": event_id
+        "event_id": event_id,
 
       });
 
@@ -319,27 +316,28 @@ export default function Events({ path, ...props }) {
       });
 
       if (response && response.ok) {
-        console.log('Reject event handled successfully');
+        //console.log('Reject event handled successfully');
         return response.ok
       } else if (response) {
-        const errorResponse = await response.json();
-        console.log('Error:', errorResponse.message);
+        // const errorResponse =
+        await response.json();
+        //console.log('Error:', errorResponse.message);
       } else {
-        console.log('Error: No response received');
+        //console.log('Error: No response received');
       }
     } catch (error) {
-      console.error('Error:', error.message);
+      //console.error('Error:', error.message);
     }
   }
 
   async function inspectEvent(event_id, checkbox_list) {
-    console.log('Inspect event id:', event_id);
-    console.log('checkbox_list:', checkbox_list);
+    //console.log('Inspect event id:', event_id);
+    //console.log('checkbox_list:', checkbox_list);
 
     try {
       const body = JSON.stringify({
         "event_id": event_id,
-        "checkbox_list": checkbox_list
+        "checkbox_list": checkbox_list,
 
       });
 
@@ -352,16 +350,17 @@ export default function Events({ path, ...props }) {
       });
 
       if (response && response.ok) {
-        console.log('Reject event handled successfully');
+        //console.log('Reject event handled successfully');
         return response.ok
       } else if (response) {
-        const errorResponse = await response.json();
-        console.log('Error:', errorResponse.message);
+        // const errorResponse =
+        await response.json();
+        //console.log('Error:', errorResponse.message);
       } else {
-        console.log('Error: No response received');
+        //console.log('Error: No response received');
       }
     } catch (error) {
-      console.error('Error:', error.message);
+      //console.error('Error:', error.message);
     }
   }
   const isDone = (eventPages?.[eventPages.length - 1]?.length ?? 0) < API_LIMIT;
@@ -388,7 +387,7 @@ export default function Events({ path, ...props }) {
     }
 
     if (uploading.includes(id)) {
-      console.log('uploading includes id: ' + id );
+      //console.log('uploading includes id: ' + id );
       return;
     }
 
@@ -399,27 +398,28 @@ export default function Events({ path, ...props }) {
     //changes here
 
     //re-enable after debugging
-   setUploading((prev) => [...prev, id]);
+    setUploading((prev) => [...prev, id]);
 
     //create local entry for plus event
     // const response = await axios.post(`events/${id}/plus`);
 
 
     let response;
-    let retrainResponse;
+    // let retrainResponse;
     switch (action) {
       case 'reject':
         //create local entry for plus event
-        console.log('Case Reject:  ' + id );
+        //console.log('Case Reject:  ' + id );
 
         //renable after debug
         response = await axios.post(`events/${id}/plus`);
 
         try {
-         const reject = await rejectEvent(id)
-         console.log("reject respones " + reject)
+          // const reject =
+          await rejectEvent(id)
+          //console.log("reject respones " + reject)
         } catch (error) {
-          console.error('An error occurred while making the POST request:', error);
+          //console.error('An error occurred while making the POST request:', error);
         }
 
         // Reject - no user input
@@ -428,49 +428,51 @@ export default function Events({ path, ...props }) {
 
       case 'accept':
         //create local entry for plus event
-        console.log('Case Accept:  ' + id );
+        //console.log('Case Accept:  ' + id );
         response = await axios.post(`events/${id}/plus`);
         // Accept - no user input
         try {
-          const accept = await acceptEvent(id)
-          console.log("reject respones " + accept)
-         } catch (error) {
-           console.error('An error occurred while making the POST request:', error);
-         }
+          // const accept =
+          await acceptEvent(id)
+          //console.log("reject respones " + accept)
+        } catch (error) {
+          //console.error('An error occurred while making the POST request:', error);
+        }
         break;
 
       case 'inspect':
         //create local entry for plus event
-        console.log('Case Inspect:  ' + id );
+        //console.log('Case Inspect:  ' + id );
         setState({ ...state, showPlusConfig: false, showInspectConfig: false })
         response = await axios.post(`events/${id}/plus`);
         // Inspect - user input
         // use selected checkboxes
         try {
-          const inspect = await inspectEvent(id, selectedCheckboxes)
-          console.log("inspect respones " + inspect)
-         } catch (error) {
-           console.error('An error occurred while making the POST request:', error);
-         }
+          // const inspect =
+          await inspectEvent(id, selectedCheckboxes)
+          //console.log("inspect respones " + inspect)
+        } catch (error) {
+          //console.error('An error occurred while making the POST request:', error);
+        }
 
         break;
 
 
       default:
-        console.error('Invalid action');
+        //console.error('Invalid action');
         return;
     }
     setState({ ...state, showDownloadMenu: false, showPlusConfig: false, showInspectConfig: false });
 
     //clear checkbox data
     clearSelectedCheckboxes();
-   if (response.status === 200) {
+    if (response.status === 200) {
       mutate(
         (pages) =>
           pages.map((page) =>
             page.map((event) => {
               if (event.id === id) {
-                console.log('uploading includes plus id: ' + id );
+                //console.log('uploading includes plus id: ' + id );
                 return { ...event, plus_id: response.data.plus_id };
               }
               return event;
@@ -481,25 +483,6 @@ export default function Events({ path, ...props }) {
     }
 
     //change upload endpoint based on button press
-
-      //reject - no user input
-
-      //accept - no user input
-
-      //inspect - user input
-
-        //use selected check boxes
-
-      //dismiss - no user input
-
-
-
-
-    //use post to backend server
-
-    //clear checkboxes
-
-
 
 
 
@@ -600,7 +583,7 @@ export default function Events({ path, ...props }) {
               label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Apply RAID'}
               value="plus"
               // onSelect={() => onSendToPlus(downloadEvent.id)}
-              onSelect={(e) => setState({ ...state, showDownloadMenu: false, showPlusConfig: true, })}
+              onSelect={() => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
             />
           )}
           {downloadEvent.plus_id && (
@@ -670,16 +653,16 @@ export default function Events({ path, ...props }) {
             </a>
           </div>
           <div className="p-2 flex justify-start flex-row-center">
-          <Button color="red" className="ml-2" onClick={(e) =>  {
-            setState({ ...state, showPlusConfig: false })
-            onSendToPlus(viewEvent, "reject", e);
+            <Button color="red" className="ml-2" onClick={(e) =>  {
+              setState({ ...state, showPlusConfig: false })
+              onSendToPlus(viewEvent, "reject", e);
 
             }} type="outlined">
               Reject
             </Button>
             <Button color="green" className="ml-2" onClick={(e) => {
-            setState({ ...state, showPlusConfig: false })
-            onSendToPlus(viewEvent, "accept", e);
+              setState({ ...state, showPlusConfig: false })
+              onSendToPlus(viewEvent, "accept", e);
 
             }} type="outlined">
               Accept
@@ -696,47 +679,47 @@ export default function Events({ path, ...props }) {
       )}
       {state.showInspectConfig && (
         <Dialog>
-        <div className="p-4">
-          <Heading size="lg">Please select which object(s) were in the event</Heading>
-          <p className="mb-2">You can choose multiple objects, as to why this was a false positive event.</p>
-        </div>
-        {/* Add the rest of the checkboxes with their unique id and value attributes */}
-        {/* ... */}
-        <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
-          <input
-            id="bordered-checkbox-5" type="checkbox" value="Person"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
-            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-          />
-          <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Person</label>
-        </div>
-        <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
-          <input
-            id="bordered-checkbox-6" type="checkbox" value="Animal"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
-            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-          />
-          <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Animal</label>
-        </div>
-        <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
-          <input
-            id="bordered-checkbox-5" type="checkbox" value="Vehicle"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
-            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-          />
-          <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Vehicle</label>
-        </div>
-        <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
-          <input
-            id="bordered-checkbox-6" type="checkbox" value="Nothing"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
-            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-          />
-          <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Nothing</label>
-        </div>
-        <div className="flex justify-between w-full my-4">
+          <div className="p-4">
+            <Heading size="lg">Please select which object(s) were in the event</Heading>
+            <p className="mb-2">You can choose multiple objects, as to why this was a false positive event.</p>
+          </div>
+          {/* Add the rest of the checkboxes with their unique id and value attributes */}
+          {/* ... */}
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-5" type="checkbox" value="Person"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Person</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-6" type="checkbox" value="Animal"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Animal</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-5" type="checkbox" value="Vehicle"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Vehicle</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-6" type="checkbox" value="Nothing"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Nothing</label>
+          </div>
+          <div className="flex justify-between w-full my-4">
             <Button
               type="outlined"
               className="mr-2"
               onClick={() => {
-                console.log('Selected cancel for event: ' + viewEvent);
-                //console.log('Selected event:', state.eventId);
+                //console.log('Selected cancel for event: ' + viewEvent);
+                ////console.log('Selected event:', state.eventId);
                 clearSelectedCheckboxes();
                 setState({ ...state, showInspectConfig: false })
 
@@ -750,8 +733,8 @@ export default function Events({ path, ...props }) {
               className="mr-2"
               disabled={selectedCheckboxes.length === 0}
               onClick={(e) => {
-                console.log('Selected checkboxes:');
-                console.log('Selected event: ' +  viewEvent);
+                //console.log('Selected checkboxes:');
+                //console.log('Selected event: ' +  viewEvent);
                 // logSelectedCheckboxes();
                 // clearSelectedCheckboxes();
 
@@ -767,7 +750,7 @@ export default function Events({ path, ...props }) {
               Accept
             </Button>
           </div>
-      </Dialog>
+        </Dialog>
       )}
       {deleteFavoriteState.showDeleteFavorite && (
         <Dialog>
@@ -858,7 +841,7 @@ export default function Events({ path, ...props }) {
                                 color="gray"
                                 disabled={uploading.includes(event.id)}
                                 //onClick={(e) => onSendToPlus(event.id, e)}
-                                onClick={(e) => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
+                                onClick={() => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
                               >
                                 {uploading.includes(event.id) ? 'Uploading...' : 'RAID'}
                               </Button>

@@ -8,7 +8,11 @@ BIRDSEYE_PIPE = "/tmp/cache/birdseye"
 CACHE_DIR = "/tmp/cache"
 YAML_EXT = (".yaml", ".yml")
 PLUS_ENV_VAR = "PLUS_API_KEY"
-PLUS_API_HOST = "https://api.frigate.video"
+PLUS_API_HOST = "http://127.0.0.1:5173"
+RETRAIN_HOST = "RETRAIN_HOST"
+DB_URL = "DB_URL"
+DB_USERNAME = "DB_USERNAME"
+DB_PASSWORD = "DB_PASSWORD"
 BTBN_PATH = "/usr/lib/btbn-ffmpeg"
 
 # Regex Consts

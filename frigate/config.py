@@ -1036,7 +1036,7 @@ class FrigateConfig(FrigateBaseModel):
             enabled_labels.update(camera.objects.track)
 
         config.model.create_colormap(sorted(enabled_labels))
-        config.model.check_and_load_plus_model(plus_api)
+        # config.model.check_and_load_plus_model(plus_api)
 
         for key, detector in config.detectors.items():
             detector_config: DetectorConfig = parse_obj_as(DetectorConfig, detector)
@@ -1069,9 +1069,9 @@ class FrigateConfig(FrigateBaseModel):
                     merged_model["path"] = "/edgetpu_model.tflite"
 
             detector_config.model = ModelConfig.parse_obj(merged_model)
-            detector_config.model.check_and_load_plus_model(
-                plus_api, detector_config.type
-            )
+            # detector_config.model.check_and_load_plus_model(
+            #     plus_api, detector_config.type
+            # )
             detector_config.model.compute_model_hash()
             config.detectors[key] = detector_config
 

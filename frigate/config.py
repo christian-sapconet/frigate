@@ -20,6 +20,7 @@ from frigate.const import (
 )
 from frigate.detectors.detector_config import BaseDetectorConfig
 from frigate.plus import PlusApi
+from frigate.retrain import RetrainApi
 from frigate.util import (
     create_mask,
     deep_merge,
@@ -910,7 +911,7 @@ class FrigateConfig(FrigateBaseModel):
         title="Global timestamp style configuration.",
     )
 
-    def runtime_config(self, plus_api: PlusApi = None) -> FrigateConfig:
+    def runtime_config(self, plus_api: PlusApi = None, retrain_api: RetrainApi = None) -> FrigateConfig:
         """Merge camera config with globals."""
         config = self.copy(deep=True)
 

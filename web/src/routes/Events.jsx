@@ -271,6 +271,38 @@ export default function Events({ path, ...props }) {
     [size, setSize, isValidating, isDone]
   );
 
+  const onRetrainAccept = async (id) => {
+    if (uploading.includes(id)) {
+      return;
+    }
+
+    const response = axios.post(`events/${id}/accept`)
+
+    if (response.status === 200) {
+      mutate(
+        (pages) =>
+          pages.map((page) =>
+            page.map((event) => {
+              if (event.id === id) {
+                return { ...event, plus_id: response.data.plus_id };
+              }
+              return event;
+            })
+          ),
+        false
+      );
+    }
+
+    setUploading((prev) => prev.filter((i) => i !== id));
+
+    if (state.showDownloadMenu && downloadEvent.id === id) {
+      setState({ ...state, showDownloadMenu: false });
+    }
+
+    setState({ ...state, showPlusSubmit: false });
+
+  }
+
   const onSendToPlus = async (id, false_positive, validBox) => {
     if (uploading.includes(id)) {
       return;
@@ -452,7 +484,7 @@ export default function Events({ path, ...props }) {
       )}
       {state.showPlusSubmit && (
         <Dialog>
-          {config.plus.enabled ? (
+          {config.retrain.enabled ? (
             <>
               <div className="p-4">
                 <Heading size="lg">Submit to Gotcha</Heading>
@@ -491,7 +523,8 @@ export default function Events({ path, ...props }) {
                   <Button
                     className="ml-2"
                     color="green"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
+                    // onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
+                    onClick={() => onRetrainAccept(plusSubmitEvent.id)}
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >

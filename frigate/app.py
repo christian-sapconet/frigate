@@ -37,6 +37,7 @@ from frigate.models import Event, Recordings, Timeline
 from frigate.object_processing import TrackedObjectProcessor
 from frigate.output import output_frames
 from frigate.plus import PlusApi
+from frigate.retrain import RetrainApi
 from frigate.ptz import OnvifController
 from frigate.record.record import manage_recordings
 from frigate.stats import StatsEmitter, stats_init
@@ -59,6 +60,7 @@ class FrigateApp:
         self.detection_shms: list[mp.shared_memory.SharedMemory] = []
         self.log_queue: Queue = mp.Queue()
         self.plus_api = PlusApi()
+        self.retrain_api = RetrainApi()
         self.camera_metrics: dict[str, CameraMetricsTypes] = {}
         self.record_metrics: dict[str, RecordMetricsTypes] = {}
         self.processes: dict[str, int] = {}
@@ -93,7 +95,7 @@ class FrigateApp:
             config_file = config_file_yaml
 
         user_config = FrigateConfig.parse_file(config_file)
-        self.config = user_config.runtime_config(self.plus_api)
+        self.config = user_config.runtime_config(self.plus_api, self.retrain_api)
 
         for camera_name in self.config.cameras.keys():
             # create camera_metrics
@@ -221,6 +223,7 @@ class FrigateApp:
             self.onvif_controller,
             self.external_event_processor,
             self.plus_api,
+            self.retrain_api,
         )
 
     def init_onvif(self) -> None:

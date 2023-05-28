@@ -393,7 +393,7 @@ export default function Events({ path, ...props }) {
           {downloadEvent.end_time && downloadEvent.has_snapshot && !downloadEvent.plus_id && (
             <MenuItem
               icon={UploadPlus}
-              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Send to Frigate+'}
+              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Send to Gotcha'}
               value="plus"
               onSelect={() => showSubmitToPlus(downloadEvent.id, downloadEvent.label, downloadEvent.box)}
             />
@@ -401,7 +401,7 @@ export default function Events({ path, ...props }) {
           {downloadEvent.plus_id && (
             <MenuItem
               icon={UploadPlus}
-              label={'Sent to Frigate+'}
+              label={'Sent to Gotcha'}
               value="plus"
               onSelect={() => setState({ ...state, showDownloadMenu: false })}
             />
@@ -455,7 +455,7 @@ export default function Events({ path, ...props }) {
           {config.plus.enabled ? (
             <>
               <div className="p-4">
-                <Heading size="lg">Submit to Frigate+</Heading>
+                <Heading size="lg">Submit to Gotcha</Heading>
 
                 <img
                   className="flex-grow-0"
@@ -470,7 +470,7 @@ export default function Events({ path, ...props }) {
                   </p>
                 ) : (
                   <p className="mb-2">
-                    Events prior to version 0.13 can only be submitted to Frigate+ without annotations.
+                    Events prior to version 0.13 can only be submitted to Gotcha without annotations.
                   </p>
                 )}
               </div>
@@ -514,7 +514,7 @@ export default function Events({ path, ...props }) {
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >
-                    Submit to Frigate+
+                    Submit to Gotcha
                   </Button>
                 </div>
               )}
@@ -522,15 +522,15 @@ export default function Events({ path, ...props }) {
           ) : (
             <>
               <div className="p-4">
-                <Heading size="lg">Setup a Frigate+ Account</Heading>
-                <p className="mb-2">In order to submit images to Frigate+, you first need to setup an account.</p>
+                <Heading size="lg">Setup a Gotcha Account</Heading>
+                <p className="mb-2">In order to submit images to Gotcha, you first need to setup an account.</p>
                 <a
                   className="text-blue-500 hover:underline"
-                  href="https://plus.frigate.video"
+                  href="https://account.gotcha.camera"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  https://plus.frigate.video
+                  https://account.gotcha.camera
                 </a>
               </div>
               <div className="p-2 flex justify-start flex-row-reverse space-x-2">
@@ -624,27 +624,18 @@ export default function Events({ path, ...props }) {
                         </div>
                       </div>
                       <div class="hidden sm:flex flex-col justify-end mr-2">
-                        {event.end_time && event.has_snapshot && (
+                        {(event.end_time && event.has_snapshot) && (
                           <Fragment>
                             {event.plus_id ? (
-                              <div className="uppercase text-xs underline">
-                                <Link
-                                  href={`https://plus.frigate.video/dashboard/edit-image/?id=${event.plus_id}`}
-                                  target="_blank"
-                                  rel="nofollow"
-                                >
-                                  Edit in Frigate+
-                                </Link>
-                              </div>
+                              <div className="uppercase text-xs">Applied Gotcha</div>
                             ) : (
                               <Button
                                 color="gray"
                                 disabled={uploading.includes(event.id)}
-                                onClick={(e) =>
-                                  showSubmitToPlus(event.id, event.label, event?.data?.box || event.box, e)
-                                }
+                                //onClick={(e) => onSendToPlus(event.id, e)}
+                                onClick={(e) => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
                               >
-                                {uploading.includes(event.id) ? 'Uploading...' : 'Send to Frigate+'}
+                                {uploading.includes(event.id) ? 'Uploading...' : 'Gotcha'}
                               </Button>
                             )}
                           </Fragment>

@@ -276,7 +276,7 @@ export default function System() {
 
           {!gpu_usages ? (
             <div className="p-4">
-              <Link href={'https://docs.frigate.video/configuration/hardware_acceleration'}>
+              <Link href={'https://docs.gotcha.camera/configuration/hardware_acceleration'}>
                 Hardware acceleration has not been setup, see the docs to setup hardware acceleration.
               </Link>
             </div>
@@ -289,8 +289,7 @@ export default function System() {
                     {gpu_usages[gpu]['gpu'] == -1 ? (
                       <div className="p-4">
                         There was an error getting usage stats. This does not mean hardware acceleration is not working.
-                        Either your GPU does not support this or Frigate does not have proper access to get statistics.
-                        This is expected for the Home Assistant addon.
+                        Either your GPU does not support this or Gotcha does not have proper access to get statistics.
                       </div>
                     ) : (
                       <Table className="w-full">

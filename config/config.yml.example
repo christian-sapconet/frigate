@@ -1,16 +1,80 @@
 mqtt:
-  host: mqtt
+  enabled: True
+  host: 10.0.10.49
+  user: gotcha
+  password: gotcha
 
 cameras:
-  test:
+  driveway:
+    hwaccel_args: preset-nvidia-h264
     ffmpeg:
       inputs:
-        - path: /media/frigate/car-stopping.mp4
-          input_args: -re -stream_loop -1 -fflags +genpts
+        - path: rtsp://wyze:Wyze@192.168.5.23/live
           roles:
             - detect
-            - rtmp
+            - record
     detect:
-      height: 1080
       width: 1920
+      height: 1080
       fps: 5
+    objects:
+      track:
+        - person
+        - car
+    record:
+      enabled: True
+    snapshots:
+      timestamp: True
+      bounding_box: False
+      retain:
+        default: 1
+  cam2:
+    ffmpeg:
+      hwaccel_args: preset-nvidia-h264
+      inputs:
+        - path: rtsp://192.168.0.150:554/user=admin&password=2628&channel=1&stream=0
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1920
+      height: 1080
+      fps: 5
+    objects:
+      track:
+        - person
+        # - dog
+        - car
+    snapshots:
+      enabled: True
+      timestamp: True
+      bounding_box: False
+      retain:
+        default: 1
+
+detectors:
+  tensorrt:
+    type: tensorrt
+    device: 0 #This is the default, select the first GPU
+
+model:
+  path: /trt-models/yolov7-tiny-416.trt
+  # path: /trt-models/yolov7-tiny-custom.trt
+  input_tensor: nchw
+  input_pixel_format: rgb
+  width: 416
+  height: 416
+
+record:
+  enabled: true
+  retain:
+    days: 0
+  events:
+    retain:
+      default: 3
+
+# Include all cameras by default in Birdseye view
+birdseye:
+  enabled: True
+  mode: objects
+

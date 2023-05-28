@@ -16,6 +16,9 @@ export default defineConfig({
       languageWorkers: ['editorWorkerService'], // we don't use any of the default languages
     }),
   ],
+  // server: {
+  //   port: 5050, // Specify the desired port number
+  // },
   test: {
     environment: 'jsdom',
     alias: {

@@ -111,7 +111,7 @@ export default function System() {
 
       {state.showFfprobe && (
         <Dialog>
-          <div className="p-4 mb-2 max-h-96 whitespace-pre-line overflow-auto">
+          <div className="p-4 mb-2 max-h-96 whitespace-pre-line overflow-scroll">
             <Heading size="lg">Ffprobe Output</Heading>
             {state.ffprobe != '' ? (
               <div>
@@ -175,7 +175,7 @@ export default function System() {
 
       {state.showVainfo && (
         <Dialog>
-          <div className="p-4 overflow-auto whitespace-pre-line">
+          <div className="p-4 overflow-scroll whitespace-pre-line">
             <Heading size="lg">Vainfo Output</Heading>
             {state.vainfo != '' ? (
               <div className="mb-2 max-h-96 whitespace-pre-line">
@@ -242,7 +242,7 @@ export default function System() {
 
           {!gpu_usages ? (
             <div className="p-4">
-              <Link href={'https://docs.frigate.video/configuration/hardware_acceleration'}>
+              <Link href={'https://docs.bankey.co.za/configuration/hardware_acceleration'}>
                 Hardware acceleration has not been setup, see the docs to setup hardware acceleration.
               </Link>
             </div>
@@ -255,8 +255,8 @@ export default function System() {
                     {gpu_usages[gpu]['gpu'] == -1 ? (
                       <div className="p-4">
                         There was an error getting usage stats. This does not mean hardware acceleration is not working.
-                        Either your GPU does not support this or Frigate does not have proper access to get statistics.
-                        This is expected for the Home Assistant addon.
+                        Either your GPU does not support this or Gotcha does not have proper access to get statistics.
+                        
                       </div>
                     ) : (
                       <Table className="w-full">

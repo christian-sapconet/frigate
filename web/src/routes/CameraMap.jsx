@@ -218,7 +218,7 @@ ${Object.keys(objectMaskPoints)
         content={
           <p>
             When done, copy each mask configuration into your <code className="font-mono">config.yml</code> file
-            restart your Frigate instance to save your changes.
+            restart your Gotcha instance to save your changes.
           </p>
         }
         header="Warning"

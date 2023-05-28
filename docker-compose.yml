@@ -30,10 +30,20 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./config/config.yml:/config/config.yml:ro
       - ./debug/media:/media/frigate
-      - ./debug/db:/db
+      - ./debug/db:/db:rw
       # Create the trt-models folder using the documented method of generating TRT models
       - ./debug/trt-models:/trt-models
       - /dev/bus/usb:/dev/bus/usb
+    # volumes:
+    #   - /etc/localtime:/etc/localtime:ro
+    #   - /home/ubuntu/Gotcha/docker/config.yml:/config/config.yml
+    #   - /mnt/md0/gotcha-footage/:/media/frigate
+    #   - /home/ubuntu/Gotcha/docker/db/:/db
+    #   - /home/ubuntu/Gotcha/trt-models:/trt-models
+      - type: tmpfs # Optional: 1GB of memory, reduces SSD/SD Card wear
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
     environment:
       FRIGATE_RTSP_PASSWORD: "password"
       PLUS_API_KEY: "01344070-b04e-47b6-84af-f9948d8ebd38:5bc0338b173153cfe36adeb3999cbd3a72d2add8"

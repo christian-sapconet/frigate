@@ -32,8 +32,4 @@ services:
       # Create the trt-models folder using the documented method of generating TRT models
       # - ./debug/trt-models:/trt-models
       - /dev/bus/usb:/dev/bus/usb
-  mqtt:
-    container_name: mqtt
-    image: eclipse-mosquitto:1.6
-    ports:
-      - "1883:1883"
+

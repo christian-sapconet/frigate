@@ -31,6 +31,7 @@ services:
       - ./config/config.yml:/config/config.yml:ro
       - ./debug/media:/media/frigate
       - ./debug/db:/db:rw
+      - .debug/model_cache:/config/model_cache
       # Create the trt-models folder using the documented method of generating TRT models
       - ./debug/trt-models:/trt-models
       - /dev/bus/usb:/dev/bus/usb
@@ -44,6 +45,12 @@ services:
         target: /tmp/cache
         tmpfs:
           size: 1000000000
+    # networks:
+    #   - my_bridge_network
     environment:
       FRIGATE_RTSP_PASSWORD: "password"
       PLUS_API_KEY: "01344070-b04e-47b6-84af-f9948d8ebd38:5bc0338b173153cfe36adeb3999cbd3a72d2add8"
+
+# networks:
+#   my_bridge_network:
+#     driver: bridges

@@ -37,6 +37,7 @@ from frigate.models import Event, Recordings, Timeline
 from frigate.events.external import ExternalEventProcessor
 from frigate.object_processing import TrackedObject
 from frigate.plus import PlusApi
+from frigate.retrain import RetrainApi
 from frigate.ptz import OnvifController
 from frigate.stats import stats_snapshot
 from frigate.util import (
@@ -63,6 +64,7 @@ def create_app(
     onvif: OnvifController,
     external_processor: ExternalEventProcessor,
     plus_api: PlusApi,
+    retrain_api: RetrainApi,
 ):
     app = Flask(__name__)
 
@@ -83,6 +85,7 @@ def create_app(
     app.onvif = onvif
     app.external_processor = external_processor
     app.plus_api = plus_api
+    app.retrain_api = retrain_api
     app.camera_error_image = None
     app.hwaccel_errors = []
 
@@ -270,6 +273,115 @@ def send_to_plus(id):
             )
 
     return make_response(jsonify({"success": True, "plus_id": plus_id}), 200)
+
+@bp.route("/events/<id>/accept", methods=("POST",))
+def retrain_accept(id):
+    if not current_app.retrain_api.is_active():
+        message = "RETRAIN_HOST environment variable is not set"
+        logger.error(message)
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": message,
+                }
+            ),
+            400,
+        )
+
+
+    try:
+        event = Event.get(Event.id == id)
+    except DoesNotExist:
+        message = f"Event {id} not found"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 404)
+
+
+    if event.end_time is None:
+        logger.error(f"Unable to load clean png for in-progress event: {event.id}")
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Unable to load clean png for in-progress event",
+                }
+            ),
+            400,
+        )
+
+
+    try:
+        retrain_id = current_app.retrain_api.accept(event.id)
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    # store image id in the database
+    event.retrain_id = retrain_id
+    event.plus_id = retrain_id
+    event.save()
+
+    return make_response(jsonify({"success": True, "retrain_id": retrain_id}), 200)
+
+@bp.route("/events/<id>/reject", methods=("POST",))
+def retrain_reject(id):
+    if not current_app.retrain_api.is_active():
+        message = "RETRAIN_HOST environment variable is not set"
+        logger.error(message)
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": message,
+                }
+            ),
+            400,
+        )
+
+
+    try:
+        event = Event.get(Event.id == id)
+    except DoesNotExist:
+        message = f"Event {id} not found"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 404)
+
+
+    if event.end_time is None:
+        logger.error(f"Unable to load clean png for in-progress event: {event.id}")
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Unable to load clean png for in-progress event",
+                }
+            ),
+            400,
+        )
+
+
+    try:
+        retrain_id = current_app.retrain_api.accept(event.id)
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    # store image id in the database
+    event.retrain_id = retrain_id
+    event.plus_id = retrain_id
+    event.save()
+
+    return make_response(jsonify({"success": True, "retrain_id": retrain_id}), 200)
+
+
+
 
 
 @bp.route("/events/<id>/false_positive", methods=("PUT",))
@@ -919,7 +1031,7 @@ def config():
             cmd["cmd"] = clean_camera_user_pass(" ".join(cmd["cmd"]))
 
     config["plus"] = {"enabled": current_app.plus_api.is_active()}
-
+    config["retrain"] = {"enabled": current_app.retrain_api.is_active()}
     for detector, detector_config in config["detectors"].items():
         detector_config["model"][
             "labelmap"

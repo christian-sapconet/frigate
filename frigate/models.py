@@ -41,6 +41,8 @@ class Event(Model):  # type: ignore[misc]
     retain_indefinitely = BooleanField(default=False)
     ratio = FloatField(default=1.0)
     plus_id = CharField(max_length=30)
+    #added as test (RAID)
+    retrain_id = CharField(max_length=30)
     model_hash = CharField(max_length=32)
     detector_type = CharField(max_length=32)
     model_type = CharField(max_length=32)

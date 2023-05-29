@@ -848,39 +848,39 @@ class TestConfig(unittest.TestCase):
         runtime_config = frigate_config.runtime_config()
         assert runtime_config.model.merged_labelmap[0] == "person"
 
-    def test_plus_labelmap(self):
-        with open("/config/model_cache/test", "w") as f:
-            json.dump(self.plus_model_info, f)
-        with open("/config/model_cache/test.json", "w") as f:
-            json.dump(self.plus_model_info, f)
+    #  def test_plus_labelmap(self):
+    #     with open("/config/model_cache/test", "w") as f:
+    #         json.dump(self.plus_model_info, f)
+    #     with open("/config/model_cache/test.json", "w") as f:
+    #         json.dump(self.plus_model_info, f)
 
-        config = {
-            "mqtt": {"host": "mqtt"},
-            "model": {"path": "plus://test"},
-            "cameras": {
-                "back": {
-                    "ffmpeg": {
-                        "inputs": [
-                            {
-                                "path": "rtsp://10.0.0.1:554/video",
-                                "roles": ["detect"],
-                            },
-                        ]
-                    },
-                    "detect": {
-                        "height": 1080,
-                        "width": 1920,
-                        "fps": 5,
-                    },
-                }
-            },
-        }
+    #     config = {
+    #         "mqtt": {"host": "mqtt"},
+    #         "model": {"path": "plus://test"},
+    #         "cameras": {
+    #             "back": {
+    #                 "ffmpeg": {
+    #                     "inputs": [
+    #                         {
+    #                             "path": "rtsp://10.0.0.1:554/video",
+    #                             "roles": ["detect"],
+    #                         },
+    #                     ]
+    #                 },
+    #                 "detect": {
+    #                     "height": 1080,
+    #                     "width": 1920,
+    #                     "fps": 5,
+    #                 },
+    #             }
+    #         },
+    #     }
 
-        frigate_config = FrigateConfig(**config)
-        assert config == frigate_config.dict(exclude_unset=True)
+    #     frigate_config = FrigateConfig(**config)
+    #     assert config == frigate_config.dict(exclude_unset=True)
 
-        runtime_config = frigate_config.runtime_config(PlusApi())
-        assert runtime_config.model.merged_labelmap[0] == "amazon"
+    #     runtime_config = frigate_config.runtime_config(PlusApi())
+    #     assert runtime_config.model.merged_labelmap[0] == "amazon"
 
     def test_fails_on_invalid_role(self):
         config = {

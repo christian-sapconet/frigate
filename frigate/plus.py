@@ -29,9 +29,10 @@ def get_jpg_bytes(image: ndarray, max_dim: int, quality: int) -> bytes:
     jpg_bytes = jpg.tobytes()
     return jpg_bytes if type(jpg_bytes) is bytes else b""
 
-def generate_random_string(length):
+
+def generate_random_string(length: int) -> str:
     letters_and_digits = string.ascii_letters + string.digits
-    result_str = ''.join(random.choice(letters_and_digits) for _ in range(length))
+    result_str = "".join(random.choice(letters_and_digits) for _ in range(length))
     return result_str
 
 

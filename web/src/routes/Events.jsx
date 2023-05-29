@@ -28,7 +28,7 @@ import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../uti
 import TimeAgo from '../components/TimeAgo';
 
 const API_LIMIT = 25;
-const retrainUrl = `http://100.113.106.126:5003`
+const retrainUrl = `http://sapconet-server.local:5003`
 
 const daysAgo = (num) => {
   let date = new Date();
@@ -403,11 +403,11 @@ export default function Events({ path, ...props }) {
     setUploading((prev) => [...prev, id]);
 
     //create local entry for plus event
-    // const response = await axios.post(`events/${id}/plus`);
+    let response = await axios.post(`events/${id}/plus`);
 
 
-    let response;
-    let retrainResponse;
+    // let response;
+
     switch (action) {
       case 'reject':
         //create local entry for plus event

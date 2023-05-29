@@ -189,20 +189,12 @@ def send_to_plus(id):
             400,
         )
 
-    include_annotation = (
-        request.json.get("include_annotation") if request.is_json else None
-    )
-
     try:
         event = Event.get(Event.id == id)
     except DoesNotExist:
         message = f"Event {id} not found"
         logger.error(message)
         return make_response(jsonify({"success": False, "message": message}), 404)
-
-    # events from before the conversion to relative dimensions cant include annotations
-    if event.data.get("box") is None:
-        include_annotation = None
 
     if event.end_time is None:
         logger.error(f"Unable to load clean png for in-progress event: {event.id}")
@@ -256,23 +248,8 @@ def send_to_plus(id):
     event.plus_id = plus_id
     event.save()
 
-    if not include_annotation is None:
-        box = event.data["box"]
-
-        try:
-            current_app.plus_api.add_annotation(
-                event.plus_id,
-                box,
-                event.label,
-            )
-        except Exception as ex:
-            logger.exception(ex)
-            return make_response(
-                jsonify({"success": False, "message": str(ex)}),
-                400,
-            )
-
     return make_response(jsonify({"success": True, "plus_id": plus_id}), 200)
+
 
 @bp.route("/events/<id>/accept", methods=("POST",))
 def retrain_accept(id):
@@ -289,14 +266,12 @@ def retrain_accept(id):
             400,
         )
 
-
     try:
         event = Event.get(Event.id == id)
     except DoesNotExist:
         message = f"Event {id} not found"
         logger.error(message)
-        return make_response(jsonify({"success": False, "message": message}), 404)
-
+        return make_response(jsonify({"success": False, "message id": message}), 404)
 
     if event.end_time is None:
         logger.error(f"Unable to load clean png for in-progress event: {event.id}")
@@ -310,7 +285,6 @@ def retrain_accept(id):
             400,
         )
 
-
     try:
         retrain_id = current_app.retrain_api.accept(event.id)
     except Exception as ex:
@@ -321,67 +295,11 @@ def retrain_accept(id):
         )
 
     # store image id in the database
-    event.retrain_id = retrain_id
-    event.plus_id = retrain_id
+    event.retrain_id = event.id
+    # event.plus_id = retrain_id
     event.save()
 
-    return make_response(jsonify({"success": True, "retrain_id": retrain_id}), 200)
-
-@bp.route("/events/<id>/reject", methods=("POST",))
-def retrain_reject(id):
-    if not current_app.retrain_api.is_active():
-        message = "RETRAIN_HOST environment variable is not set"
-        logger.error(message)
-        return make_response(
-            jsonify(
-                {
-                    "success": False,
-                    "message": message,
-                }
-            ),
-            400,
-        )
-
-
-    try:
-        event = Event.get(Event.id == id)
-    except DoesNotExist:
-        message = f"Event {id} not found"
-        logger.error(message)
-        return make_response(jsonify({"success": False, "message": message}), 404)
-
-
-    if event.end_time is None:
-        logger.error(f"Unable to load clean png for in-progress event: {event.id}")
-        return make_response(
-            jsonify(
-                {
-                    "success": False,
-                    "message": "Unable to load clean png for in-progress event",
-                }
-            ),
-            400,
-        )
-
-
-    try:
-        retrain_id = current_app.retrain_api.accept(event.id)
-    except Exception as ex:
-        logger.exception(ex)
-        return make_response(
-            jsonify({"success": False, "message": str(ex)}),
-            400,
-        )
-
-    # store image id in the database
-    event.retrain_id = retrain_id
-    event.plus_id = retrain_id
-    event.save()
-
-    return make_response(jsonify({"success": True, "retrain_id": retrain_id}), 200)
-
-
-
+    return make_response(jsonify({"success": True, "retrain_id": event.id}), 200)
 
 
 @bp.route("/events/<id>/false_positive", methods=("PUT",))

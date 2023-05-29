@@ -39,6 +39,8 @@ def generate_random_string(length: int) -> str:
 class PlusApi:
     def __init__(self) -> None:
         self.host = PLUS_API_HOST
+        # if PLUS_API_HOST in os.environ:
+        #     self.host = os.environ.get(PLUS_API_HOST)
         self.key = None
         if PLUS_ENV_VAR in os.environ:
             self.key = os.environ.get(PLUS_ENV_VAR)

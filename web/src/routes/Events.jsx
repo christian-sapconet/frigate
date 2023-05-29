@@ -28,6 +28,7 @@ import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../uti
 import TimeAgo from '../components/TimeAgo';
 
 const API_LIMIT = 25;
+const retrainUrl = `http://100.113.106.126:5003`
 
 const daysAgo = (num) => {
   let date = new Date();
@@ -274,8 +275,9 @@ export default function Events({ path, ...props }) {
         "event_id": event_id,
 
       });
+      // `url(${apiHost}/api/events/${event.id}/thumbnail.jpg)`
 
-      const response = await fetch('http://10.0.10.49:5003/api/reject', {
+      const response = await fetch(`${retrainUrl}/api/reject`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -306,8 +308,8 @@ export default function Events({ path, ...props }) {
         "event_id": event_id,
 
       });
-
-      const response = await fetch('http://10.0.10.49:5003/api/accept', {
+      // const response = await fetch(`${retrainHost}/api/reject`
+      const response = await fetch(`${retrainUrl}/api/accept`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -340,8 +342,8 @@ export default function Events({ path, ...props }) {
         "checkbox_list": checkbox_list,
 
       });
-
-      const response = await fetch('http://10.0.10.49:5003/api/inspect', {
+        //`${retrainHost}/api/reject`
+      const response = await fetch(`${retrainUrl}/api/inspect`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -405,14 +407,14 @@ export default function Events({ path, ...props }) {
 
 
     let response;
-    // let retrainResponse;
+    let retrainResponse;
     switch (action) {
       case 'reject':
         //create local entry for plus event
         //console.log('Case Reject:  ' + id );
 
         //renable after debug
-        response = await axios.post(`events/${id}/plus`);
+        //response = await axios.post(`events/${id}/plus`);
 
         try {
           // const reject =
@@ -435,6 +437,7 @@ export default function Events({ path, ...props }) {
           // const accept =
           await acceptEvent(id)
           //console.log("reject respones " + accept)
+          // retrainResponse = await axios.post(`events/${id}/retrain`);
         } catch (error) {
           //console.error('An error occurred while making the POST request:', error);
         }
@@ -462,7 +465,9 @@ export default function Events({ path, ...props }) {
         //console.error('Invalid action');
         return;
     }
+
     setState({ ...state, showDownloadMenu: false, showPlusConfig: false, showInspectConfig: false });
+
 
     //clear checkbox data
     clearSelectedCheckboxes();
@@ -809,7 +814,9 @@ export default function Events({ path, ...props }) {
                           {event.sub_label
                             ? `${event.label.replaceAll('_', ' ')}: ${event.sub_label.replaceAll('_', ' ')}`
                             : event.label.replaceAll('_', ' ')}
-                          ({(event.top_score * 100).toFixed(0)}%)
+                          ({(event?.data?.top_score || event.top_score || 0) == 0
+                            ? null
+                            : ` ${((event?.data?.top_score || event.top_score) * 100).toFixed(0)}%`})
                         </div>
                         <div className="text-sm flex">
                           <Clock className="h-5 w-5 mr-2 inline" />
@@ -905,7 +912,9 @@ export default function Events({ path, ...props }) {
                                     ? `${apiHost}/api/events/${event.id}/snapshot.jpg`
                                     : `${apiHost}/api/events/${event.id}/thumbnail.jpg`
                                 }
-                                alt={`${event.label} at ${(event.top_score * 100).toFixed(0)}% confidence`}
+                                alt={`${event.label} at ${((event?.data?.top_score || event.top_score) * 100).toFixed(
+                                  0
+                                )}% confidence`}
                               />
                             </div>
                           ) : null}

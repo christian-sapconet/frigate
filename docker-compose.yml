@@ -49,7 +49,8 @@ services:
     environment:
       FRIGATE_RTSP_PASSWORD: "password"
       PLUS_API_KEY: "01344070-b04e-47b6-84af-f9948d8ebd38:5bc0338b173153cfe36adeb3999cbd3a72d2add8"
-      RETRAIN_HOST: "https://10.0.10.49:5003"
+      PLUS_API_HOST: "https://api.frigate.video"
+      RETRAIN_HOST: "http://10.0.10.49:5003"
       REACT_APP_RETRAIN_HOST: "10.0.10.49:5003"
 
 # networks:

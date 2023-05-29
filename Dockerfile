@@ -200,7 +200,7 @@ FROM deps AS devcontainer
 
 # Do not start the actual Frigate service on devcontainer as it will be started by VSCode
 # But start a fake service for simulating the logs
-# COPY docker/fake_frigate_run /etc/s6-overlay/s6-rc.d/frigate/run
+COPY docker/fake_frigate_run /etc/s6-overlay/s6-rc.d/frigate/run
 
 # Create symbolic link to the frigate source code, as go2rtc's create_config.sh uses it
 RUN mkdir -p /opt/frigate \

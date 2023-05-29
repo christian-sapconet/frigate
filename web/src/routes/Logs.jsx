@@ -20,7 +20,7 @@ export default function Logs() {
 
   useEffect(() => {
     switch (logService) {
-      case 'frigate':
+      case 'gotcha':
         setLogs(frigateLogs);
         break;
       case 'go2rtc':
@@ -36,7 +36,7 @@ export default function Logs() {
     <div className="space-y-4 p-2 px-4">
       <Heading>Logs</Heading>
 
-      <ButtonsTabbed viewModes={['frigate', 'go2rtc', 'nginx']} currentViewMode={logService} setViewMode={setLogService} />
+      <ButtonsTabbed viewModes={['gotcha', 'go2rtc', 'nginx']} currentViewMode={logService} setViewMode={setLogService} />
 
       <Button className="" onClick={handleCopyLogs}>
         Copy to Clipboard

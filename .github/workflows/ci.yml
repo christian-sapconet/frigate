@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - dev
-      - main
+      - master
 
 # only run the latest commit to avoid cache overwrites
 concurrency:

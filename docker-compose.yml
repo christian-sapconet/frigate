@@ -1,0 +1,43 @@
+version: "3"
+services:
+  devcontainer:
+    container_name: frigate-devcontainer
+    # add groups from host for render, plugdev, video
+    group_add:
+      - "109" # render
+      - "110" # render
+      - "44"  # video
+      - "46"  # plugdev
+    shm_size: "256mb"
+    build:
+      context: .
+      # Use target devcontainer-trt for TensorRT dev
+      target: devcontainer-trt
+    deploy:
+          resources:
+              reservations:
+                  devices:
+                      - driver: nvidia
+                        count: 1
+                        capabilities: [gpu]
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      # - /dev/dri:/dev/dri # for intel hwaccel, needs to be updated for your hardware
+    volumes:
+      - .:/workspace/frigate:cached
+      - ./web/dist:/opt/frigate/web:cached
+      - /etc/localtime:/etc/localtime:ro
+      - ./config/config.yml:/config/config.yml:ro
+      - ./debug:/media/frigate
+      - ./debug/db:/db
+      # Create the trt-models folder using the documented method of generating TRT models
+      - ./debug/trt-models:/trt-models
+      - /dev/bus/usb:/dev/bus/usb
+    ports:
+      - "5000:5000"
+      - "8554:8554" # RTSP feeds
+      - "8555:8555/tcp" # WebRTC over tcp
+      - "8555:8555/udp" # WebRTC over udp
+    environment:
+      FRIGATE_RTSP_PASSWORD: "password"
+      

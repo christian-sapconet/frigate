@@ -36,4 +36,5 @@ services:
     network_mode: host
     environment:
       FRIGATE_RTSP_PASSWORD: "password"
-      PLUS_API_KEY: "d61cb8b3-a0ac-4224-a1be-eac75ad29446:f43208789024aebe25203fe68e8b61784f4b0424"
+      # PLUS_API_KEY: "d61cb8b3-a0ac-4224-a1be-eac75ad29446:f43208789024aebe25203fe68e8b61784f4b0424"
+      PLUS_API_KEY: "947815cc-7d1b-4fe3-9476-7b5687310c96:1aea48069ec5a88edaf657fdcb5fd51a59ac213b"

@@ -61,14 +61,17 @@ class PlusApi:
             if self.key is None:
                 raise Exception("Plus API not activated")
             parts = self.key.split(":")
-            r = requests.get(f"{self.host}/v1/auth/token", auth=(parts[0], parts[1]))
+            r = requests.get(
+                f"{self.host}/v1/auth/token",
+                json={"userID": parts[0], "password": parts[1]},
+            )
             if not r.ok:
                 raise Exception("Unable to refresh API token")
             self._token_data = r.json()
 
     def _get_authorization_header(self) -> dict:
         self._refresh_token_if_needed()
-        return {"authorization": f"Bearer {self._token_data.get('accessToken')}"}
+        return {"Authorization": f"Bearer {self._token_data.get('accessToken')}"}
 
     def _get(self, path: str) -> Response:
         return requests.get(

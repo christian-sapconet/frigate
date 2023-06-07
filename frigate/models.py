@@ -43,6 +43,8 @@ class Event(Model):  # type: ignore[misc]
     model_hash = CharField(max_length=32)
     detector_type = CharField(max_length=32)
     model_type = CharField(max_length=32)
+    sub_label = CharField(max_length=100, null=True)
+    inspect = CharField(max_length=32, null=True)
     data = JSONField()  # ex: tracked object box, region, etc.
 
 

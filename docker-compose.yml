@@ -1,7 +1,7 @@
 version: "3"
 services:
   devcontainer:
-    container_name: frigate-devcontainer
+    container_name: frigate-devcontainer-trt
     # add groups from host for render, plugdev, video
     group_add:
       - "109" # render
@@ -12,7 +12,7 @@ services:
     build:
       context: .
       # Use target devcontainer-trt for TensorRT dev
-      target: devcontainer
+      target: devcontainer-trt
     deploy:
           resources:
               reservations:
@@ -30,10 +30,10 @@ services:
       - ./config:/config
       - ./debug:/media/frigate
       # Create the trt-models folder using the documented method of generating TRT models
-      # - ./debug/trt-models:/trt-models
+      - ./debug/trt-models:/trt-models
+      - .debug/db:/db
       - /dev/bus/usb:/dev/bus/usb
-  mqtt:
-    container_name: mqtt
-    image: eclipse-mosquitto:1.6
-    ports:
-      - "1883:1883"
+    network_mode: host
+    environment:
+      FRIGATE_RTSP_PASSWORD: "password"
+      PLUS_API_KEY: "d61cb8b3-a0ac-4224-a1be-eac75ad29446:f43208789024aebe25203fe68e8b61784f4b0424"

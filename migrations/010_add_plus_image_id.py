@@ -32,8 +32,9 @@ def migrate(migrator, database, fake=False, **kwargs):
     migrator.add_fields(
         Event,
         plus_id=pw.CharField(max_length=30, null=True),
+        retrain_id=pw.CharField(max_length=30, null=True),
     )
 
 
 def rollback(migrator, database, fake=False, **kwargs):
-    migrator.remove_fields(Event, ["plus_id"])
+    migrator.remove_fields(Event, ["plus_id", "retrain_id"])

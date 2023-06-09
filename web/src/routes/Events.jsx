@@ -3,7 +3,6 @@ import { route } from 'preact-router';
 import ActivityIndicator from '../components/ActivityIndicator';
 import Heading from '../components/Heading';
 import { Tabs, TextTab } from '../components/Tabs';
-import Link from '../components/Link';
 import { useApiHost } from '../api';
 import useSWR from 'swr';
 import useSWRInfinite from 'swr/infinite';
@@ -27,9 +26,9 @@ import Dialog from '../components/Dialog';
 import MultiSelect from '../components/MultiSelect';
 import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../utils/dateUtil';
 import TimeAgo from '../components/TimeAgo';
-import TimelineSummary from '../components/TimelineSummary';
 
 const API_LIMIT = 25;
+const retrainUrl = `http://sapconet-server.local:5003`
 
 const daysAgo = (num) => {
   let date = new Date();
@@ -58,21 +57,19 @@ export default function Events({ path, ...props }) {
     showDownloadMenu: false,
     showDatePicker: false,
     showCalendar: false,
-    showPlusSubmit: false,
-  });
-  const [plusSubmitEvent, setPlusSubmitEvent] = useState({
-    id: null,
-    label: null,
-    validBox: null,
+    showPlusConfig: false,
+    showInspectConfig: false,
+    selectedCheckboxes: [],
   });
   const [uploading, setUploading] = useState([]);
   const [viewEvent, setViewEvent] = useState();
-  const [eventOverlay, setEventOverlay] = useState();
+  const [selectedCheckboxes, setSelectedCheckboxes] = useState([]);
+
+
+
   const [eventDetailType, setEventDetailType] = useState('clip');
   const [downloadEvent, setDownloadEvent] = useState({
     id: null,
-    label: null,
-    box: null,
     has_clip: false,
     has_snapshot: false,
     plus_id: undefined,
@@ -82,6 +79,12 @@ export default function Events({ path, ...props }) {
     deletingFavoriteEventId: null,
     showDeleteFavorite: false,
   });
+
+  const clearSelectedCheckboxes = () => {
+    setSelectedCheckboxes([]);
+  };
+
+
 
   const eventsFetcher = useCallback((path, params) => {
     params = { ...params, include_thumbnails: 0, limit: API_LIMIT };
@@ -106,6 +109,9 @@ export default function Events({ path, ...props }) {
   const { data: config } = useSWR('config');
 
   const { data: allSubLabels } = useSWR(['sub_labels', { split_joined: 1 }]);
+
+
+
 
   const filterValues = useMemo(
     () => ({
@@ -156,6 +162,7 @@ export default function Events({ path, ...props }) {
     }
   };
 
+
   const onToggleNamedFilter = (name, item) => {
     let items;
 
@@ -190,14 +197,6 @@ export default function Events({ path, ...props }) {
     onFilter(name, items);
   };
 
-  const onEventFrameSelected = (event, frame, seekSeconds) => {
-    if (this.player) {
-      this.player.pause();
-      this.player.currentTime(seekSeconds);
-      setEventOverlay(frame);
-    }
-  };
-
   const datePicker = useRef();
 
   const downloadButton = useRef();
@@ -206,8 +205,6 @@ export default function Events({ path, ...props }) {
     e.stopPropagation();
     setDownloadEvent((_prev) => ({
       id: event.id,
-      box: event?.data?.box || event.box,
-      label: event.label,
       has_clip: event.has_clip,
       has_snapshot: event.has_snapshot,
       plus_id: event.plus_id,
@@ -215,16 +212,6 @@ export default function Events({ path, ...props }) {
     }));
     downloadButton.current = e.target;
     setState({ ...state, showDownloadMenu: true });
-  };
-
-  const showSubmitToPlus = (event_id, label, box, e) => {
-    if (e) {
-      e.stopPropagation();
-    }
-    // if any of the box coordinates are > 1, then the box data is from an older version
-    // and not valid to submit to plus with the snapshot image
-    setPlusSubmitEvent({ id: event_id, label, validBox: !box.some((d) => d > 1) });
-    setState({ ...state, showDownloadMenu: false, showPlusSubmit: true });
   };
 
   const handleSelectDateRange = useCallback(
@@ -253,6 +240,131 @@ export default function Events({ path, ...props }) {
     [path, searchParams, setSearchParams]
   );
 
+  const handleRejectCheckboxChange = (event) => {
+    const { value, checked } = event.target;
+    setSelectedCheckboxes((prev) =>
+      checked ? [...prev, value] : prev.filter((item) => item !== value)
+    );
+  };
+
+  // const handleCheckboxChange = (event) => {
+  //   const { value } = event.target;
+  //   const index = state.selectedCheckboxes.indexOf(value);
+
+  //   if (index === -1) {
+  //     setState((prevState) => ({
+  //       ...prevState,
+  //       selectedCheckboxes: [...prevState.selectedCheckboxes, value]
+  //     }));
+  //   } else {
+  //     setState((prevState) => ({
+  //       ...prevState,
+  //       selectedCheckboxes: prevState.selectedCheckboxes.filter(
+  //         (checkbox) => checkbox !== value
+  //       ),
+  //     }));
+  //   }
+  // };
+
+
+  async function rejectEvent(event_id) {
+    // //console.log('Reject event id:', event_id);
+
+    try {
+      const body = JSON.stringify({
+        "event_id": event_id,
+
+      });
+      // `url(${apiHost}/api/events/${event.id}/thumbnail.jpg)`
+
+      const response = await fetch(`${retrainUrl}/api/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
+
+      if (response && response.ok) {
+        // ////console.log('Reject event handled successfully');
+        return response.ok
+      } else if (response) {
+        // const errorResponse =
+        await response.json();
+        // ////console.log('Error:', errorResponse.message);
+      } else {
+        //console.log('Error: No response received');
+      }
+    } catch (error) {
+      //console.error('Error:', error.message);
+    }
+  }
+
+  async function acceptEvent(event_id) {
+    //console.log('Accept event id:', event_id);
+
+    try {
+      const body = JSON.stringify({
+        "event_id": event_id,
+
+      });
+      // const response = await fetch(`${retrainHost}/api/reject`
+      const response = await fetch(`${retrainUrl}/api/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
+
+      if (response && response.ok) {
+        //console.log('Reject event handled successfully');
+        return response.ok
+      } else if (response) {
+        // const errorResponse =
+        await response.json();
+        //console.log('Error:', errorResponse.message);
+      } else {
+        //console.log('Error: No response received');
+      }
+    } catch (error) {
+      //console.error('Error:', error.message);
+    }
+  }
+
+  async function inspectEvent(event_id, checkbox_list) {
+    //console.log('Inspect event id:', event_id);
+    //console.log('checkbox_list:', checkbox_list);
+
+    try {
+      const body = JSON.stringify({
+        "event_id": event_id,
+        "checkbox_list": checkbox_list,
+
+      });
+        //`${retrainHost}/api/reject`
+      const response = await fetch(`${retrainUrl}/api/inspect`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      });
+
+      if (response && response.ok) {
+        //console.log('Reject event handled successfully');
+        return response.ok
+      } else if (response) {
+        // const errorResponse =
+        await response.json();
+        //console.log('Error:', errorResponse.message);
+      } else {
+        //console.log('Error: No response received');
+      }
+    } catch (error) {
+      //console.error('Error:', error.message);
+    }
+  }
   const isDone = (eventPages?.[eventPages.length - 1]?.length ?? 0) < API_LIMIT;
 
   // hooks for infinite scroll
@@ -271,23 +383,101 @@ export default function Events({ path, ...props }) {
     [size, setSize, isValidating, isDone]
   );
 
-  const onSendToPlus = async (id, false_positive, validBox) => {
+  const onSendToPlus = async (id, action, e) => {
+    if (e) {
+      e.stopPropagation();
+    }
+
     if (uploading.includes(id)) {
+      //console.log('uploading includes id: ' + id );
       return;
     }
 
+    // if (config.plus.enabled) {
+    //   setState({ ...state, showDownloadMenu: false, showPlusConfig: true });
+    //   // return;
+    // }
+    //changes here
+
+    //re-enable after debugging
     setUploading((prev) => [...prev, id]);
 
-    const response = false_positive
-      ? await axios.put(`events/${id}/false_positive`)
-      : await axios.post(`events/${id}/plus`, validBox ? { include_annotation: 1 } : {});
+    //create local entry for plus event
+    let response = await axios.post(`events/${id}/plus`);
 
+
+    // let response;
+
+    switch (action) {
+      case 'reject':
+        //create local entry for plus event
+        //console.log('Case Reject:  ' + id );
+
+        //renable after debug
+        //response = await axios.post(`events/${id}/plus`);
+
+        try {
+          // const reject =
+          await rejectEvent(id)
+          //console.log("reject respones " + reject)
+        } catch (error) {
+          //console.error('An error occurred while making the POST request:', error);
+        }
+
+        // Reject - no user input
+
+        break;
+
+      case 'accept':
+        //create local entry for plus event
+        //console.log('Case Accept:  ' + id );
+        response = await axios.post(`events/${id}/plus`);
+        // Accept - no user input
+        try {
+          // const accept =
+          await acceptEvent(id)
+          //console.log("reject respones " + accept)
+          // retrainResponse = await axios.post(`events/${id}/retrain`);
+        } catch (error) {
+          //console.error('An error occurred while making the POST request:', error);
+        }
+        break;
+
+      case 'inspect':
+        //create local entry for plus event
+        //console.log('Case Inspect:  ' + id );
+        setState({ ...state, showPlusConfig: false, showInspectConfig: false })
+        response = await axios.post(`events/${id}/plus`);
+        // Inspect - user input
+        // use selected checkboxes
+        try {
+          // const inspect =
+          await inspectEvent(id, selectedCheckboxes)
+          //console.log("inspect respones " + inspect)
+        } catch (error) {
+          //console.error('An error occurred while making the POST request:', error);
+        }
+
+        break;
+
+
+      default:
+        //console.error('Invalid action');
+        return;
+    }
+
+    setState({ ...state, showDownloadMenu: false, showPlusConfig: false, showInspectConfig: false });
+
+
+    //clear checkbox data
+    clearSelectedCheckboxes();
     if (response.status === 200) {
       mutate(
         (pages) =>
           pages.map((page) =>
             page.map((event) => {
               if (event.id === id) {
+                //console.log('uploading includes plus id: ' + id );
                 return { ...event, plus_id: response.data.plus_id };
               }
               return event;
@@ -297,13 +487,15 @@ export default function Events({ path, ...props }) {
       );
     }
 
+    //change upload endpoint based on button press
+
+
+
     setUploading((prev) => prev.filter((i) => i !== id));
 
     if (state.showDownloadMenu && downloadEvent.id === id) {
       setState({ ...state, showDownloadMenu: false });
     }
-
-    setState({ ...state, showPlusSubmit: false });
   };
 
   const handleEventDetailTabChange = (index) => {
@@ -390,18 +582,19 @@ export default function Events({ path, ...props }) {
               download
             />
           )}
-          {downloadEvent.end_time && downloadEvent.has_snapshot && !downloadEvent.plus_id && (
+          {(downloadEvent.end_time && downloadEvent.has_snapshot && !downloadEvent.plus_id) && (
             <MenuItem
               icon={UploadPlus}
-              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Send to Frigate+'}
+              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Apply RAID'}
               value="plus"
-              onSelect={() => showSubmitToPlus(downloadEvent.id, downloadEvent.label, downloadEvent.box)}
+              // onSelect={() => onSendToPlus(downloadEvent.id)}
+              onSelect={() => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
             />
           )}
           {downloadEvent.plus_id && (
             <MenuItem
               icon={UploadPlus}
-              label={'Sent to Frigate+'}
+              label={'Apply RAID'}
               value="plus"
               onSelect={() => setState({ ...state, showDownloadMenu: false })}
             />
@@ -450,96 +643,118 @@ export default function Events({ path, ...props }) {
           />
         </Menu>
       )}
-      {state.showPlusSubmit && (
+      {state.showPlusConfig && (
         <Dialog>
-          {config.plus.enabled ? (
-            <>
-              <div className="p-4">
-                <Heading size="lg">Submit to Frigate+</Heading>
+          <div className="p-4">
+            <Heading size="lg">Gotcha RAID (Reject, Accept, Inspect, Dismiss) Account</Heading>
+            <p className="mb-2">In order to submit footage to Gotcha RAID, please select one of the following.</p>
+            <a
+              className="text-blue-500 hover:underline"
+              href="https://gotcha.camera"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              https://gotcha.camera
+            </a>
+          </div>
+          <div className="p-2 flex justify-start flex-row-center">
+            <Button color="red" className="ml-2" onClick={(e) =>  {
+              setState({ ...state, showPlusConfig: false })
+              onSendToPlus(viewEvent, "reject", e);
 
-                <img
-                  className="flex-grow-0"
-                  src={`${apiHost}/api/events/${plusSubmitEvent.id}/snapshot.jpg`}
-                  alt={`${plusSubmitEvent.label}`}
-                />
+            }} type="outlined">
+              Reject
+            </Button>
+            <Button color="green" className="ml-2" onClick={(e) => {
+              setState({ ...state, showPlusConfig: false })
+              onSendToPlus(viewEvent, "accept", e);
 
-                {plusSubmitEvent.validBox ? (
-                  <p className="mb-2">
-                    Objects in locations you want to avoid are not false positives. Submitting them as false positives
-                    will confuse the model.
-                  </p>
-                ) : (
-                  <p className="mb-2">
-                    Events prior to version 0.13 can only be submitted to Frigate+ without annotations.
-                  </p>
-                )}
-              </div>
-              {plusSubmitEvent.validBox ? (
-                <div className="p-2 flex justify-start flex-row-reverse space-x-2">
-                  <Button className="ml-2" onClick={() => setState({ ...state, showPlusSubmit: false })} type="text">
-                    {uploading.includes(plusSubmitEvent.id) ? 'Close' : 'Cancel'}
-                  </Button>
-                  <Button
-                    className="ml-2"
-                    color="red"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, true, plusSubmitEvent.validBox)}
-                    disabled={uploading.includes(plusSubmitEvent.id)}
-                    type="text"
-                  >
-                    This is not a {plusSubmitEvent.label}
-                  </Button>
-                  <Button
-                    className="ml-2"
-                    color="green"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
-                    disabled={uploading.includes(plusSubmitEvent.id)}
-                    type="text"
-                  >
-                    This is a {plusSubmitEvent.label}
-                  </Button>
-                </div>
-              ) : (
-                <div className="p-2 flex justify-start flex-row-reverse space-x-2">
-                  <Button
-                    className="ml-2"
-                    onClick={() => setState({ ...state, showPlusSubmit: false })}
-                    disabled={uploading.includes(plusSubmitEvent.id)}
-                    type="text"
-                  >
-                    {uploading.includes(plusSubmitEvent.id) ? 'Close' : 'Cancel'}
-                  </Button>
-                  <Button
-                    className="ml-2"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
-                    disabled={uploading.includes(plusSubmitEvent.id)}
-                    type="text"
-                  >
-                    Submit to Frigate+
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="p-4">
-                <Heading size="lg">Setup a Frigate+ Account</Heading>
-                <p className="mb-2">In order to submit images to Frigate+, you first need to setup an account.</p>
-                <a
-                  className="text-blue-500 hover:underline"
-                  href="https://plus.frigate.video"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  https://plus.frigate.video
-                </a>
-              </div>
-              <div className="p-2 flex justify-start flex-row-reverse space-x-2">
-                <Button className="ml-2" onClick={() => setState({ ...state, showPlusSubmit: false })} type="text">
-                  Close
-                </Button>
-              </div>
-            </>
-          )}
+            }} type="outlined">
+              Accept
+            </Button>
+            <Button color="gray" className="ml-2" onClick={() => setState({ ...state, showInspectConfig: true})} type="outlined">
+              Inspect
+            </Button>
+            <Button className="ml-2" onClick={() => setState({ ...state, showPlusConfig: false })} type="outlined">
+              Dismiss
+            </Button>
+
+          </div>
+        </Dialog>
+      )}
+      {state.showInspectConfig && (
+        <Dialog>
+          <div className="p-4">
+            <Heading size="lg">Please select which object(s) were in the event</Heading>
+            <p className="mb-2">You can choose multiple objects, as to why this was a false positive event.</p>
+          </div>
+          {/* Add the rest of the checkboxes with their unique id and value attributes */}
+          {/* ... */}
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-5" type="checkbox" value="Person"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Person</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-6" type="checkbox" value="Animal"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Animal</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-5" type="checkbox" value="Vehicle"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-5" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Vehicle</label>
+          </div>
+          <div class="flex items-center pl-4 border border-gray-200 rounded dark:border-gray-700">
+            <input
+              id="bordered-checkbox-6" type="checkbox" value="Nothing"name="bordered-checkbox" onChange={handleRejectCheckboxChange}
+              class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label for="bordered-checkbox-6" class="w-full py-4 ml-2 text-sm font-medium text-gray-900 dark:text-gray-300">Nothing</label>
+          </div>
+          <div className="flex justify-between w-full my-4">
+            <Button
+              type="outlined"
+              className="mr-2"
+              onClick={() => {
+                //console.log('Selected cancel for event: ' + viewEvent);
+                ////console.log('Selected event:', state.eventId);
+                clearSelectedCheckboxes();
+                setState({ ...state, showInspectConfig: false })
+
+              }}
+
+            >
+              Cancel
+            </Button>
+            <Button
+              color="green"
+              className="mr-2"
+              disabled={selectedCheckboxes.length === 0}
+              onClick={(e) => {
+                //console.log('Selected checkboxes:');
+                //console.log('Selected event: ' +  viewEvent);
+                // logSelectedCheckboxes();
+                // clearSelectedCheckboxes();
+
+
+                onSendToPlus(viewEvent, "inspect", e)
+                setState({ ...state, showPlusConfig: false, showInspectConfig: false })
+
+
+
+              }}
+
+            >
+              Accept
+            </Button>
+          </div>
         </Dialog>
       )}
       {deleteFavoriteState.showDeleteFavorite && (
@@ -599,9 +814,9 @@ export default function Events({ path, ...props }) {
                           {event.sub_label
                             ? `${event.label.replaceAll('_', ' ')}: ${event.sub_label.replaceAll('_', ' ')}`
                             : event.label.replaceAll('_', ' ')}
-                          {(event?.data?.top_score || event.top_score || 0) == 0
+                          ({(event?.data?.top_score || event.top_score || 0) == 0
                             ? null
-                            : ` (${((event?.data?.top_score || event.top_score) * 100).toFixed(0)}%)`}
+                            : ` ${((event?.data?.top_score || event.top_score) * 100).toFixed(0)}%`})
                         </div>
                         <div className="text-sm flex">
                           <Clock className="h-5 w-5 mr-2 inline" />
@@ -624,27 +839,18 @@ export default function Events({ path, ...props }) {
                         </div>
                       </div>
                       <div class="hidden sm:flex flex-col justify-end mr-2">
-                        {event.end_time && event.has_snapshot && (
+                        {(event.end_time && event.has_snapshot) && (
                           <Fragment>
                             {event.plus_id ? (
-                              <div className="uppercase text-xs underline">
-                                <Link
-                                  href={`https://plus.frigate.video/dashboard/edit-image/?id=${event.plus_id}`}
-                                  target="_blank"
-                                  rel="nofollow"
-                                >
-                                  Edit in Frigate+
-                                </Link>
-                              </div>
+                              <div className="uppercase text-xs">Applied Raid</div>
                             ) : (
                               <Button
                                 color="gray"
                                 disabled={uploading.includes(event.id)}
-                                onClick={(e) =>
-                                  showSubmitToPlus(event.id, event.label, event?.data?.box || event.box, e)
-                                }
+                                //onClick={(e) => onSendToPlus(event.id, e)}
+                                onClick={() => setState({ ...state, showDownloadMenu: false, showPlusConfig: true })}
                               >
-                                {uploading.includes(event.id) ? 'Uploading...' : 'Send to Frigate+'}
+                                {uploading.includes(event.id) ? 'Uploading...' : 'RAID'}
                               </Button>
                             )}
                           </Fragment>
@@ -681,58 +887,20 @@ export default function Events({ path, ...props }) {
 
                         <div>
                           {eventDetailType == 'clip' && event.has_clip ? (
-                            <div>
-                              <TimelineSummary
-                                event={event}
-                                onFrameSelected={(frame, seekSeconds) =>
-                                  onEventFrameSelected(event, frame, seekSeconds)
-                                }
-                              />
-                              <div>
-                                <VideoPlayer
-                                  options={{
-                                    preload: 'auto',
-                                    autoplay: true,
-                                    sources: [
-                                      {
-                                        src: `${apiHost}vod/event/${event.id}/master.m3u8`,
-                                        type: 'application/vnd.apple.mpegurl',
-                                      },
-                                    ],
-                                  }}
-                                  seekOptions={{ forward: 10, backward: 5 }}
-                                  onReady={(player) => {
-                                    this.player = player;
-                                    this.player.on('playing', () => {
-                                      setEventOverlay(undefined);
-                                    });
-                                  }}
-                                  onDispose={() => {
-                                    this.player = null;
-                                  }}
-                                >
-                                  {eventOverlay ? (
-                                    <div
-                                      className="absolute border-4 border-red-600"
-                                      style={{
-                                        left: `${Math.round(eventOverlay.data.box[0] * 100)}%`,
-                                        top: `${Math.round(eventOverlay.data.box[1] * 100)}%`,
-                                        right: `${Math.round(
-                                          (1 - eventOverlay.data.box[2] - eventOverlay.data.box[0]) * 100
-                                        )}%`,
-                                        bottom: `${Math.round(
-                                          (1 - eventOverlay.data.box[3] - eventOverlay.data.box[1]) * 100
-                                        )}%`,
-                                      }}
-                                    >
-                                      {eventOverlay.class_type == 'entered_zone' ? (
-                                        <div className="absolute w-2 h-2 bg-yellow-500 left-[50%] -translate-x-1/2 translate-y-3/4 bottom-0" />
-                                      ) : null}
-                                    </div>
-                                  ) : null}
-                                </VideoPlayer>
-                              </div>
-                            </div>
+                            <VideoPlayer
+                              options={{
+                                preload: 'auto',
+                                autoplay: true,
+                                sources: [
+                                  {
+                                    src: `${apiHost}vod/event/${event.id}/master.m3u8`,
+                                    type: 'application/vnd.apple.mpegurl',
+                                  },
+                                ],
+                              }}
+                              seekOptions={{ forward: 10, backward: 5 }}
+                              onReady={() => {}}
+                            />
                           ) : null}
 
                           {eventDetailType == 'image' || !event.has_clip ? (

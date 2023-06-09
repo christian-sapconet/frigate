@@ -171,6 +171,72 @@ class PlusApi:
         if not r.ok:
             raise Exception(r.text)
 
+    def add_true_positive(
+        self,
+        plus_id: str,
+        region: List[float],
+        bbox: List[float],
+        score: float,
+        label: str,
+        model_hash: str,
+        model_type: str,
+        detector_type: str,
+    ) -> None:
+        r = self._put(
+            f"image/{plus_id}/true_positive",
+            {
+                "label": label,
+                "x": bbox[0],
+                "y": bbox[1],
+                "w": bbox[2],
+                "h": bbox[3],
+                "regionX": region[0],
+                "regionY": region[1],
+                "regionW": region[2],
+                "regionH": region[3],
+                "score": score,
+                "model_hash": model_hash,
+                "model_type": model_type,
+                "detector_type": detector_type,
+            },
+        )
+
+        if not r.ok:
+            raise Exception(r.text)
+
+    def add_inspect(
+        self,
+        plus_id: str,
+        region: List[float],
+        bbox: List[float],
+        score: float,
+        label: str,
+        model_hash: str,
+        model_type: str,
+        detector_type: str,
+    ) -> None:
+        r = self._put(
+            f"image/{plus_id}/false_positive",
+            {
+                "label": label,
+                "x": bbox[0],
+                "y": bbox[1],
+                "w": bbox[2],
+                "h": bbox[3],
+                "regionX": region[0],
+                "regionY": region[1],
+                "regionW": region[2],
+                "regionH": region[3],
+                "score": score,
+                "model_hash": model_hash,
+                "model_type": model_type,
+                "detector_type": detector_type,
+            },
+        )
+
+        if not r.ok:
+            raise Exception(r.text)
+
     def add_annotation(
         self,
         plus_id: str,

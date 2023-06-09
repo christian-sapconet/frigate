@@ -250,21 +250,21 @@ def send_to_plus(id):
     event.plus_id = plus_id
     event.save()
 
-    if include_annotation is not None:
-        box = event.data["box"]
+    # if include_annotation is not None:
+    #     box = event.data["box"]
 
-        try:
-            current_app.plus_api.add_annotation(
-                event.plus_id,
-                box,
-                event.label,
-            )
-        except Exception as ex:
-            logger.exception(ex)
-            return make_response(
-                jsonify({"success": False, "message": str(ex)}),
-                400,
-            )
+    #     try:
+    #         current_app.plus_api.add_annotation(
+    #             event.plus_id,
+    #             box,
+    #             event.label,
+    #         )
+    #     except Exception as ex:
+    #         logger.exception(ex)
+    #         return make_response(
+    #             jsonify({"success": False, "message": str(ex)}),
+    #             400,
+    #         )
 
     return make_response(jsonify({"success": True, "plus_id": plus_id}), 200)
 
@@ -298,7 +298,7 @@ def false_positive(id):
         return make_response(jsonify({"success": False, "message": message}), 400)
 
     if event.false_positive:
-        message = "False positive already submitted to Frigate+"
+        message = "False positive already submitted to Gotcha"
         logger.error(message)
         return make_response(jsonify({"success": False, "message": message}), 400)
 
@@ -338,6 +338,80 @@ def false_positive(id):
         )
 
     event.false_positive = True
+    event.save()
+
+    return make_response(jsonify({"success": True, "plus_id": event.plus_id}), 200)
+
+
+@bp.route("/events/<id>/true_positive", methods=("PUT",))
+def true_positive(id):
+    if not current_app.plus_api.is_active():
+        message = "PLUS_API_KEY environment variable is not set"
+        logger.error(message)
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": message,
+                }
+            ),
+            400,
+        )
+
+    try:
+        event = Event.get(Event.id == id)
+    except DoesNotExist:
+        message = f"Event {id} not found"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 404)
+
+    # events from before the conversion to relative dimensions cant include annotations
+    if event.data.get("box") is None:
+        message = "Events prior to 0.13 cannot be submitted as false positives"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 400)
+
+    if event.true_positive:
+        message = "True positive already submitted to Gotcha"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 400)
+
+    if not event.plus_id:
+        plus_response = send_to_plus(id)
+        if plus_response.status_code != 200:
+            return plus_response
+        # need to refetch the event now that it has a plus_id
+        event = Event.get(Event.id == id)
+
+    region = event.data["region"]
+    box = event.data["box"]
+
+    # provide top score if score is unavailable
+    score = (
+        (event.data["top_score"] if event.data["top_score"] else event.top_score)
+        if event.data["score"] is None
+        else event.data["score"]
+    )
+
+    try:
+        current_app.plus_api.add_true_positive(
+            event.plus_id,
+            region,
+            box,
+            score,
+            event.label,
+            event.model_hash,
+            event.model_type,
+            event.detector_type,
+        )
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    event.true_positive = True
     event.save()
 
     return make_response(jsonify({"success": True, "plus_id": event.plus_id}), 200)
@@ -757,6 +831,8 @@ def events():
         Event.sub_label,
         Event.top_score,
         Event.false_positive,
+        Event.true_positive,
+        Event.inspect,
         Event.box,
         Event.data,
     ]

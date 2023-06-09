@@ -43,7 +43,10 @@ class Event(Model):  # type: ignore[misc]
     model_hash = CharField(max_length=32)
     detector_type = CharField(max_length=32)
     model_type = CharField(max_length=32)
+    inspect =  BooleanField()
     data = JSONField()  # ex: tracked object box, region, etc.
+    true_positive = BooleanField()
+    actual_object = CharField(max_length=32)
 
 
 class Timeline(Model):  # type: ignore[misc]

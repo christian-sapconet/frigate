@@ -30,6 +30,14 @@ def get_jpg_bytes(image: ndarray, max_dim: int, quality: int) -> bytes:
     return jpg_bytes if type(jpg_bytes) is bytes else b""
 
 
+def get_mp4_bytes(
+    video: ndarray,
+) -> bytes:
+    video_bytes = video.tobytes()
+
+    return video_bytes if type(video_bytes) is bytes else b""
+
+
 class PlusApi:
     def __init__(self) -> None:
         self.host = PLUS_API_HOST
@@ -214,11 +222,13 @@ class PlusApi:
         model_hash: str,
         model_type: str,
         detector_type: str,
+        actual_object: str,
     ) -> None:
         r = self._put(
-            f"image/{plus_id}/false_positive",
+            f"image/{plus_id}/inspect",
             {
                 "label": label,
+                "actual_object": actual_object,
                 "x": bbox[0],
                 "y": bbox[1],
                 "w": bbox[2],
@@ -258,6 +268,72 @@ class PlusApi:
 
         if not r.ok:
             raise Exception(r.text)
+
+    def upload_false_positive_image(self, image: ndarray, plus_id: str) -> str:
+        # plus_num = plus_id
+        r = self._get(f"image/{plus_id}/false_positive")
+        presigned_urls = r.json()
+        if not r.ok:
+            raise Exception("Unable to get signed urls")
+
+        # resize and submit original
+        files = {"file": get_jpg_bytes(image, 1920, 85)}
+        data = presigned_urls["image"]["fields"]
+        data["content-type"] = "image/jpeg"
+        r = requests.post(presigned_urls["image"]["url"], files=files, data=data)
+        if not r.ok:
+            logger.error(f"Failed to upload original: {r.status_code} {r.text}")
+            raise Exception(r.text)
+
+        if not r.ok:
+            raise Exception(r.text)
+
+        # return image id
+        return str(presigned_urls.get("camera"))
+
+    def upload_true_positive_image(self, image: ndarray, plus_id: str) -> str:
+        # plus_num = plus_id
+        r = self._get(f"image/{plus_id}/true_positive")
+        presigned_urls = r.json()
+        if not r.ok:
+            raise Exception("Unable to get signed urls")
+
+        # resize and submit original
+        files = {"file": get_jpg_bytes(image, 1920, 85)}
+        data = presigned_urls["image"]["fields"]
+        data["content-type"] = "image/jpeg"
+        r = requests.post(presigned_urls["image"]["url"], files=files, data=data)
+        if not r.ok:
+            logger.error(f"Failed to upload original: {r.status_code} {r.text}")
+            raise Exception(r.text)
+
+        if not r.ok:
+            raise Exception(r.text)
+
+        # return image id
+        return str(presigned_urls.get("camera"))
+
+    def upload_inspect_image(self, image: ndarray, plus_id: str) -> str:
+        # plus_num = plus_id
+        r = self._get(f"image/{plus_id}/inspect")
+        presigned_urls = r.json()
+        if not r.ok:
+            raise Exception("Unable to get signed urls")
+
+        # resize and submit original
+        files = {"file": get_jpg_bytes(image, 1920, 85)}
+        data = presigned_urls["image"]["fields"]
+        data["content-type"] = "image/jpeg"
+        r = requests.post(presigned_urls["image"]["url"], files=files, data=data)
+        if not r.ok:
+            logger.error(f"Failed to upload original: {r.status_code} {r.text}")
+            raise Exception(r.text)
+
+        if not r.ok:
+            raise Exception(r.text)
+
+        # return image id
+        return str(presigned_urls.get("camera"))
 
     def get_model_download_url(
         self,

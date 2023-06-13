@@ -32,6 +32,7 @@ def migrate(migrator, database, fake=False, **kwargs):
     migrator.add_fields(
         Event,
         true_positive=pw.IntegerField(null=True),
+        inspect=pw.IntegerField(null=True),
         actual_object=pw.CharField(max_length=32, null=True),
     )
 

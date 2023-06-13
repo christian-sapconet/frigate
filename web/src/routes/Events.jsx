@@ -27,7 +27,7 @@ import Dialog from '../components/Dialog';
 import MultiSelect from '../components/MultiSelect';
 import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../utils/dateUtil';
 import TimeAgo from '../components/TimeAgo';
-import TimelineSummary from '../components/TimelineSummary';
+// import TimelineSummary from '../components/TimelineSummary';
 
 const API_LIMIT = 25;
 
@@ -194,7 +194,7 @@ export default function Events({ path, ...props }) {
     if (this.player) {
       this.player.pause();
       this.player.currentTime(seekSeconds);
-      setEventOverlay(frame);
+      // setEventOverlay(frame);
     }
   };
 
@@ -271,16 +271,29 @@ export default function Events({ path, ...props }) {
     [size, setSize, isValidating, isDone]
   );
 
-  const onSendToPlus = async (id, false_positive, validBox) => {
+  const onSendToPlus = async (id, false_positive, true_positive, inspect, validBox) => {
     if (uploading.includes(id)) {
       return;
     }
 
     setUploading((prev) => [...prev, id]);
 
-    const response = false_positive
-      ? await axios.put(`events/${id}/false_positive`)
-      : await axios.post(`events/${id}/plus`, validBox ? { include_annotation: 1 } : {});
+    let response;
+    if (false_positive==true) {
+      response = await axios.put(`events/${id}/false_positive`)
+    }
+    else if (true_positive==true) {
+      response = await axios.put(`events/${id}/true_positive`)
+    } else if (inspect==true) {
+      response = await axios.put(`events/${id}/inspect`)
+    } else {
+
+      response = await axios.post(`events/${id}/plus`, validBox ? { include_annotation: 1 } : {});
+    }
+
+    // const response = true_positive
+    //   ? await axios.put(`events/${id}/true_positive`)
+    //   : await axios.post(`events/${id}/plus`, validBox ? { include_annotation: 1 } : {});
 
     if (response.status === 200) {
       mutate(
@@ -393,7 +406,7 @@ export default function Events({ path, ...props }) {
           {downloadEvent.end_time && downloadEvent.has_snapshot && !downloadEvent.plus_id && (
             <MenuItem
               icon={UploadPlus}
-              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Send to Frigate+'}
+              label={uploading.includes(downloadEvent.id) ? 'Uploading...' : 'Send to Gotcha'}
               value="plus"
               onSelect={() => showSubmitToPlus(downloadEvent.id, downloadEvent.label, downloadEvent.box)}
             />
@@ -401,7 +414,7 @@ export default function Events({ path, ...props }) {
           {downloadEvent.plus_id && (
             <MenuItem
               icon={UploadPlus}
-              label={'Sent to Frigate+'}
+              label={'Sent to Gotcha'}
               value="plus"
               onSelect={() => setState({ ...state, showDownloadMenu: false })}
             />
@@ -455,7 +468,7 @@ export default function Events({ path, ...props }) {
           {config.plus.enabled ? (
             <>
               <div className="p-4">
-                <Heading size="lg">Submit to Frigate+</Heading>
+                <Heading size="lg">Submit to Gotcha</Heading>
 
                 <img
                   className="flex-grow-0"
@@ -470,7 +483,7 @@ export default function Events({ path, ...props }) {
                   </p>
                 ) : (
                   <p className="mb-2">
-                    Events prior to version 0.13 can only be submitted to Frigate+ without annotations.
+                    Events prior to version 0.13 can only be submitted to Gotcha without annotations.
                   </p>
                 )}
               </div>
@@ -482,7 +495,7 @@ export default function Events({ path, ...props }) {
                   <Button
                     className="ml-2"
                     color="red"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, true, plusSubmitEvent.validBox)}
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, true, false, false, plusSubmitEvent.validBox)}
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >
@@ -490,8 +503,17 @@ export default function Events({ path, ...props }) {
                   </Button>
                   <Button
                     className="ml-2"
+                    color="blue"
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, false, true, plusSubmitEvent.validBox)}
+                    disabled={uploading.includes(plusSubmitEvent.id)}
+                    type="text"
+                  >
+                    Inspect
+                  </Button>
+                  <Button
+                    className="ml-2"
                     color="green"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, true, false, plusSubmitEvent.validBox)}
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >
@@ -510,11 +532,11 @@ export default function Events({ path, ...props }) {
                   </Button>
                   <Button
                     className="ml-2"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, plusSubmitEvent.validBox)}
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, true, false, plusSubmitEvent.validBox)}
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >
-                    Submit to Frigate+
+                    Submit to Gotcha
                   </Button>
                 </div>
               )}
@@ -522,15 +544,15 @@ export default function Events({ path, ...props }) {
           ) : (
             <>
               <div className="p-4">
-                <Heading size="lg">Setup a Frigate+ Account</Heading>
-                <p className="mb-2">In order to submit images to Frigate+, you first need to setup an account.</p>
+                <Heading size="lg">Setup a Gotcha Account</Heading>
+                <p className="mb-2">In order to submit images to Gotcha, you first need to setup an account.</p>
                 <a
                   className="text-blue-500 hover:underline"
-                  href="https://plus.frigate.video"
+                  href="https://gotcha.camera"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  https://plus.frigate.video
+                  https://gotcha.camera
                 </a>
               </div>
               <div className="p-2 flex justify-start flex-row-reverse space-x-2">
@@ -627,24 +649,17 @@ export default function Events({ path, ...props }) {
                         {event.end_time && event.has_snapshot && (
                           <Fragment>
                             {event.plus_id ? (
-                              <div className="uppercase text-xs underline">
-                                <Link
-                                  href={`https://plus.frigate.video/dashboard/edit-image/?id=${event.plus_id}`}
-                                  target="_blank"
-                                  rel="nofollow"
-                                >
-                                  Edit in Frigate+
-                                </Link>
-                              </div>
+                              <div className="uppercase text-xs">Sent to Gotcha</div>
                             ) : (
                               <Button
                                 color="gray"
                                 disabled={uploading.includes(event.id)}
+                                // onClick={(e) => onSendToPlus(event.id, e)}
                                 onClick={(e) =>
                                   showSubmitToPlus(event.id, event.label, event?.data?.box || event.box, e)
                                 }
                               >
-                                {uploading.includes(event.id) ? 'Uploading...' : 'Send to Frigate+'}
+                                {uploading.includes(event.id) ? 'Uploading...' : 'Send to Gotcha'}
                               </Button>
                             )}
                           </Fragment>
@@ -682,12 +697,12 @@ export default function Events({ path, ...props }) {
                         <div>
                           {eventDetailType == 'clip' && event.has_clip ? (
                             <div>
-                              <TimelineSummary
-                                event={event}
-                                onFrameSelected={(frame, seekSeconds) =>
-                                  onEventFrameSelected(event, frame, seekSeconds)
-                                }
-                              />
+                              {/* <TimelineSummary
+                                // event={event}
+                                // onFrameSelected={(frame, seekSeconds) =>
+                                //   onEventFrameSelected(event, frame, seekSeconds)
+                                // }
+                              /> */}
                               <div>
                                 <VideoPlayer
                                   options={{

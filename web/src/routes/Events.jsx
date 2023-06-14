@@ -27,7 +27,7 @@ import Dialog from '../components/Dialog';
 import MultiSelect from '../components/MultiSelect';
 import { formatUnixTimestampToDateTime, getDurationFromTimestamps } from '../utils/dateUtil';
 import TimeAgo from '../components/TimeAgo';
-// import TimelineSummary from '../components/TimelineSummary';
+import TimelineSummary from '../components/TimelineSummary';
 
 const API_LIMIT = 25;
 

@@ -46,7 +46,6 @@ class Event(Model):  # type: ignore[misc]
     inspect = BooleanField()
     data = JSONField()  # ex: tracked object box, region, etc.
     true_positive = BooleanField()
-    inspect = BooleanField()
     actual_object = CharField(max_length=32)
 
 

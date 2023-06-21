@@ -473,8 +473,30 @@ def true_positive(id):
         )
 
     try:
+        response = event_download_clip(event.id, True)
+        # logger.info("Clipy content_encoding" + str(clipy.content_encoding))
+        # logger.info("Clipy location: " + str(clipy.content_location))
+
+        # logger.info("Clipy data: " + str(clipy.get_data()))
+
+        # # Create a VideoCapture object
+        # cap = cv2.VideoCapture(clip_path)
+        # # Create a list to store the frames
+        # frames = []
+
+        # while cap.isOpened():
+        #     ret, frame = cap.read()
+
+        #     if ret:
+        #         frames.append(frame)
+        #     else:
+        #         break
+
+        # cap.release()
+        # video_file = np.array(frames)
+        # logger.info("Converted file to numpy array " + str(video_file.size))
         upload_id = current_app.plus_api.upload_true_positive_image(
-            image, event.plus_id
+            image, region, response, event.plus_id, event.id
         )
     except Exception as ex:
         logger.exception(ex)
@@ -960,6 +982,40 @@ def event_clip(id):
     response.headers["Cache-Control"] = "no-cache"
     response.headers["Content-Type"] = "video/mp4"
     if download:
+        response.headers["Content-Disposition"] = "attachment; filename=%s" % file_name
+    response.headers["Content-Length"] = os.path.getsize(clip_path)
+    response.headers[
+        "X-Accel-Redirect"
+    ] = f"/clips/{file_name}"  # nginx: http://wiki.nginx.org/NginxXSendfile
+
+    return response
+
+
+def event_download_clip(id: str, download: bool):
+    download_event = download
+
+    try:
+        event: Event = Event.get(Event.id == id)
+    except DoesNotExist:
+        return "Event not found.", 404
+
+    if not event.has_clip:
+        return "Clip not available", 404
+
+    file_name = f"{event.camera}-{id}.mp4"
+    clip_path = os.path.join(CLIPS_DIR, file_name)
+
+    if not os.path.isfile(clip_path):
+        end_ts = (
+            datetime.now().timestamp() if event.end_time is None else event.end_time
+        )
+        return recording_clip(event.camera, event.start_time, end_ts)
+
+    response = make_response()
+    response.headers["Content-Description"] = "File Transfer"
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Content-Type"] = "video/mp4"
+    if download_event:
         response.headers["Content-Disposition"] = "attachment; filename=%s" % file_name
     response.headers["Content-Length"] = os.path.getsize(clip_path)
     response.headers[

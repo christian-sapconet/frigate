@@ -59,6 +59,7 @@ export default function Events({ path, ...props }) {
     showDatePicker: false,
     showCalendar: false,
     showPlusSubmit: false,
+    showInspect: false,
   });
   const [plusSubmitEvent, setPlusSubmitEvent] = useState({
     id: null,
@@ -463,6 +464,92 @@ export default function Events({ path, ...props }) {
           />
         </Menu>
       )}
+      {state.showInspect && (
+        <Dialog>
+          {config.plus.enabled ? (
+            <>
+              <div className="p-4">
+                <Heading size="lg">Submit to Gotcha</Heading>
+
+                <img
+                  className="flex-grow-0"
+                  src={`${apiHost}/api/events/${plusSubmitEvent.id}/snapshot.jpg`}
+                  alt={`${plusSubmitEvent.label}`}
+                />
+
+                {plusSubmitEvent.validBox ? (
+                  <p className="mb-2">
+                    What items where in the frame at the, you can select multiple:
+                  </p>
+                ) : (
+                  <p className="mb-2">
+                    Events prior to version 0.13 can only be submitted to Gotcha without annotations.
+                  </p>
+                )}
+              </div>
+              {plusSubmitEvent.validBox ? (
+                <div className="p-2 flex justify-start flex-row-reverse space-x-2">
+
+                  <Button className="ml-2" onClick={() => setState({ ...state, showPlusSubmit: false })} type="text">
+                    {uploading.includes(plusSubmitEvent.id) ? 'Close' : 'Cancel'}
+                  </Button>
+
+                  {/* <Button
+                    className="ml-2"
+                    color="blue"
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, false, true, plusSubmitEvent.validBox)}
+                    disabled={uploading.includes(plusSubmitEvent.id)}
+                    type="text"
+                  >
+                    Inspect
+                  </Button> */}
+
+                </div>
+              ) : (
+                <div className="p-2 flex justify-start flex-row-reverse space-x-2">
+                  <Button
+                    className="ml-2"
+                    onClick={() => setState({ ...state, showPlusSubmit: false })}
+                    disabled={uploading.includes(plusSubmitEvent.id)}
+                    type="text"
+                  >
+                    {uploading.includes(plusSubmitEvent.id) ? 'Close' : 'Cancel'}
+                  </Button>
+                  <Button
+                    className="ml-2"
+                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, true, false, plusSubmitEvent.validBox)}
+                    disabled={uploading.includes(plusSubmitEvent.id)}
+                    type="text"
+                  >
+                    Submit to Gotcha
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="p-4">
+                <Heading size="lg">Setup a Gotcha Account</Heading>
+                <p className="mb-2">In order to submit images to Gotcha, you first need to setup an account.</p>
+                <a
+                  className="text-blue-500 hover:underline"
+                  href="https://gotcha.camera"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  https://gotcha.camera
+                </a>
+              </div>
+              <div className="p-2 flex justify-start flex-row-reverse space-x-2">
+                <Button className="ml-2" onClick={() => setState({ ...state, showPlusSubmit: false })} type="text">
+                  Close
+                </Button>
+              </div>
+            </>
+          )}
+        </Dialog>
+
+      )}
       {state.showPlusSubmit && (
         <Dialog>
           {config.plus.enabled ? (
@@ -501,15 +588,20 @@ export default function Events({ path, ...props }) {
                   >
                     This is not a {plusSubmitEvent.label}
                   </Button>
-                  <Button
+                  {/* <Button
                     className="ml-2"
                     color="blue"
-                    onClick={() => onSendToPlus(plusSubmitEvent.id, false, false, true, plusSubmitEvent.validBox)}
+                    // onClick={() => onSendToPlus(plusSubmitEvent.id, false, false, true, plusSubmitEvent.validBox)}
+
+                    // show new dialog window
+
+                    // onClick={() => onSendToPlus(plusSubmitEvent.id, false, false, true, plusSubmitEvent.validBox)}
+
                     disabled={uploading.includes(plusSubmitEvent.id)}
                     type="text"
                   >
                     Inspect
-                  </Button>
+                  </Button> */}
                   <Button
                     className="ml-2"
                     color="green"

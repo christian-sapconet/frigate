@@ -402,7 +402,7 @@ class FrigateApp:
 
     def start(self) -> None:
         self.init_logger()
-        logger.info(f"Starting Frigate ({VERSION})")
+        logger.info(f"Starting Gotcha ({VERSION})")
         try:
             self.ensure_dirs()
             try:
@@ -412,7 +412,7 @@ class FrigateApp:
                 print("*************************************************************")
                 print("***    Your config file is not valid!                     ***")
                 print("***    Please check the docs at                           ***")
-                print("***    https://docs.frigate.video/configuration/index     ***")
+                print("***    https://docs.gotcha.camera/configuration/index     ***")
                 print("*************************************************************")
                 print("*************************************************************")
                 print("***    Config Validation Errors                           ***")
@@ -460,7 +460,7 @@ class FrigateApp:
         signal.signal(signal.SIGTERM, receiveSignal)
 
         try:
-            self.flask_app.run(host="127.0.0.1", port=5001, debug=False)
+            self.flask_app.run(host="0.0.0.0", port=5001, debug=False)
         except KeyboardInterrupt:
             pass
 

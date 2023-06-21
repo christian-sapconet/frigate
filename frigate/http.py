@@ -337,10 +337,48 @@ def false_positive(id):
             400,
         )
 
+    # new uploadurl
+    # load clean.png
+    try:
+        filename = f"{event.camera}-{event.id}-clean.png"
+        image = cv2.imread(os.path.join(CLIPS_DIR, filename))
+    except Exception:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    if image is None or image.size == 0:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    try:
+        upload_id = current_app.plus_api.upload_false_positive_image(
+            image, event.plus_id
+        )
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    # end new upload
     event.false_positive = True
     event.save()
 
-    return make_response(jsonify({"success": True, "plus_id": event.plus_id}), 200)
+    return make_response(
+        jsonify({"success": True, "plus_id": event.plus_id, "upload_id": upload_id}),
+        200,
+    )
 
 
 @bp.route("/events/<id>/true_positive", methods=("PUT",))
@@ -372,7 +410,7 @@ def true_positive(id):
         return make_response(jsonify({"success": False, "message": message}), 400)
 
     if event.true_positive:
-        message = "True positive already submitted to Gotcha"
+        message = "False positive already submitted to Gotcha"
         logger.error(message)
         return make_response(jsonify({"success": False, "message": message}), 400)
 
@@ -411,26 +449,204 @@ def true_positive(id):
             400,
         )
 
+    # new uploadurl
+    # load clean.png
+    try:
+        filename = f"{event.camera}-{event.id}-clean.png"
+        image = cv2.imread(os.path.join(CLIPS_DIR, filename))
+    except Exception:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    if image is None or image.size == 0:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    try:
+        response = event_download_clip(event.id, True)
+        # logger.info("Clipy content_encoding" + str(clipy.content_encoding))
+        # logger.info("Clipy location: " + str(clipy.content_location))
+
+        # logger.info("Clipy data: " + str(clipy.get_data()))
+
+        # # Create a VideoCapture object
+        # cap = cv2.VideoCapture(clip_path)
+        # # Create a list to store the frames
+        # frames = []
+
+        # while cap.isOpened():
+        #     ret, frame = cap.read()
+
+        #     if ret:
+        #         frames.append(frame)
+        #     else:
+        #         break
+
+        # cap.release()
+        # video_file = np.array(frames)
+        # logger.info("Converted file to numpy array " + str(video_file.size))
+        upload_id = current_app.plus_api.upload_true_positive_image(
+            image, region, response, event.plus_id, event.id
+        )
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    # end new upload
     event.true_positive = True
     event.save()
 
-    return make_response(jsonify({"success": True, "plus_id": event.plus_id}), 200)
+    return make_response(
+        jsonify({"success": True, "plus_id": event.plus_id, "upload_id": upload_id}),
+        200,
+    )
 
 
-@bp.route("/events/<id>/retain", methods=("DELETE",))
-def delete_retain(id):
+@bp.route("/events/<id>/inspect", methods=("PUT",))
+def inspect_event(id):
+    if not current_app.plus_api.is_active():
+        message = "PLUS_API_KEY environment variable is not set"
+        logger.error(message)
+        return make_response(
+            jsonify(
+                {
+                    "success": False,
+                    "message": message,
+                }
+            ),
+            400,
+        )
+
     try:
         event = Event.get(Event.id == id)
     except DoesNotExist:
+        message = f"Event {id} not found"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 404)
+
+    # if not request.is_json:
+    # print("request is not json: " + str(request.args))
+    # return jsonify({"msg": "Missing JSON in request"}), 400
+
+    # data = request.get_json()
+
+    # try:
+    #     event = Event.get(Event.id == id)
+    #     if data.get("actual_object") is None:
+    #         actual_object = "person"
+    #         # return make_response(jsonify({"success": False, "message": message}), 404)
+    #     actual_object = data.get("actual_object", None)
+    #     event.actual_object = actual_object
+    #     event.save
+
+    # except DoesNotExist:
+    #     message = f"Event {id} not found"
+    #     logger.error(message)
+    #     return make_response(jsonify({"success": False, "message": message}), 404)
+
+    actual_object = "person"
+    event.actual_object = actual_object
+    event.save()
+
+    # events from before the conversion to relative dimensions cant include annotations
+    if event.data.get("box") is None:
+        message = "Events prior to 0.13 cannot be submitted as false positives"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 400)
+
+    if event.false_positive:
+        message = "False positive already submitted to Gotcha"
+        logger.error(message)
+        return make_response(jsonify({"success": False, "message": message}), 400)
+
+    if not event.plus_id:
+        plus_response = send_to_plus(id)
+        if plus_response.status_code != 200:
+            return plus_response
+        # need to refetch the event now that it has a plus_id
+        event = Event.get(Event.id == id)
+
+    region = event.data["region"]
+    box = event.data["box"]
+
+    # provide top score if score is unavailable
+    score = (
+        (event.data["top_score"] if event.data["top_score"] else event.top_score)
+        if event.data["score"] is None
+        else event.data["score"]
+    )
+
+    try:
+        current_app.plus_api.add_inspect(
+            event.plus_id,
+            region,
+            box,
+            score,
+            event.label,
+            event.model_hash,
+            event.model_type,
+            event.detector_type,
+            event.actual_object,
+        )
+    except Exception as ex:
+        logger.exception(ex)
         return make_response(
-            jsonify({"success": False, "message": "Event " + id + " not found"}), 404
+            jsonify({"success": False, "message": str(ex)}),
+            400,
         )
 
-    event.retain_indefinitely = False
+    # new uploadurl
+    # load clean.png
+    try:
+        filename = f"{event.camera}-{event.id}-clean.png"
+        image = cv2.imread(os.path.join(CLIPS_DIR, filename))
+    except Exception:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    if image is None or image.size == 0:
+        logger.error(f"Unable to load clean png for event: {event.id}")
+        return make_response(
+            jsonify(
+                {"success": False, "message": "Unable to load clean png for event"}
+            ),
+            400,
+        )
+
+    try:
+        upload_id = current_app.plus_api.upload_inspect_image(image, event.plus_id)
+    except Exception as ex:
+        logger.exception(ex)
+        return make_response(
+            jsonify({"success": False, "message": str(ex)}),
+            400,
+        )
+
+    # end new upload
+    event.inspect = True
     event.save()
 
     return make_response(
-        jsonify({"success": True, "message": "Event " + id + " un-retained"}), 200
+        jsonify({"success": True, "plus_id": event.plus_id, "upload_id": upload_id}),
+        200,
     )
 
 
@@ -766,6 +982,40 @@ def event_clip(id):
     response.headers["Cache-Control"] = "no-cache"
     response.headers["Content-Type"] = "video/mp4"
     if download:
+        response.headers["Content-Disposition"] = "attachment; filename=%s" % file_name
+    response.headers["Content-Length"] = os.path.getsize(clip_path)
+    response.headers[
+        "X-Accel-Redirect"
+    ] = f"/clips/{file_name}"  # nginx: http://wiki.nginx.org/NginxXSendfile
+
+    return response
+
+
+def event_download_clip(id: str, download: bool):
+    download_event = download
+
+    try:
+        event: Event = Event.get(Event.id == id)
+    except DoesNotExist:
+        return "Event not found.", 404
+
+    if not event.has_clip:
+        return "Clip not available", 404
+
+    file_name = f"{event.camera}-{id}.mp4"
+    clip_path = os.path.join(CLIPS_DIR, file_name)
+
+    if not os.path.isfile(clip_path):
+        end_ts = (
+            datetime.now().timestamp() if event.end_time is None else event.end_time
+        )
+        return recording_clip(event.camera, event.start_time, end_ts)
+
+    response = make_response()
+    response.headers["Content-Description"] = "File Transfer"
+    response.headers["Cache-Control"] = "no-cache"
+    response.headers["Content-Type"] = "video/mp4"
+    if download_event:
         response.headers["Content-Disposition"] = "attachment; filename=%s" % file_name
     response.headers["Content-Length"] = os.path.getsize(clip_path)
     response.headers[

@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - dev
+      - Gotcha-dev
       - master
 
 # only run the latest commit to avoid cache overwrites

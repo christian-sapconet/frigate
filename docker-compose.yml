@@ -31,7 +31,7 @@ services:
       - ./debug:/media/frigate
       # Create the trt-models folder using the documented method of generating TRT models
       - ./debug/trt-models:/trt-models
-      - .debug/db:/db
+      - ./debug/db:/db
       - /dev/bus/usb:/dev/bus/usb
     network_mode: host
     environment:

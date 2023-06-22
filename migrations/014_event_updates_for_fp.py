@@ -35,10 +35,9 @@ def migrate(migrator, database, fake=False, **kwargs):
         model_hash=pw.CharField(max_length=32, null=True),
         detector_type=pw.CharField(max_length=32, null=True),
         model_type=pw.CharField(max_length=32, null=True),
-        inspect=pw.CharField(max_length=32, null=True),
     )
 
-    migrator.drop_not_null(Event, "area", "false_positive", "inspect")
+    migrator.drop_not_null(Event, "area", "false_positive")
     migrator.add_default(Event, "false_positive", 0)
 
 

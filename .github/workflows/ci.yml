@@ -53,8 +53,8 @@ jobs:
           target: frigate
           tags: |
             ghcr.io/${{ steps.lowercaseRepo.outputs.lowercase }}:${{ github.ref_name }}-${{ env.SHORT_SHA }}
-          # cache-from: type=gha
-          # cache-to: type=gha,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Build and push TensorRT
         uses: docker/build-push-action@v4
         with:
@@ -64,4 +64,4 @@ jobs:
           target: frigate-tensorrt
           tags: |
             ghcr.io/${{ steps.lowercaseRepo.outputs.lowercase }}:${{ github.ref_name }}-${{ env.SHORT_SHA }}-tensorrt
-          # cache-from: type=gha
+          cache-from: type=gha
